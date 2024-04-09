@@ -12,6 +12,10 @@ import { changeCurrentUploader } from '../utils/handleUploaderConfig'
 import { app } from 'electron'
 import fs from 'fs-extra'
 import { AESHelper } from '../utils/aesHelper'
+import { marked } from 'marked'
+import { markdownContent } from './apiDoc'
+import http from 'http'
+import { configPaths } from '~/universal/utils/configPaths'
 
 const appPath = app.getPath('userData')
 const serverTempDir = path.join(appPath, 'serverTemp')
@@ -21,6 +25,16 @@ const LOG_PATH = path.join(STORE_PATH, 'piclist.log')
 
 const errorMessage = `upload error. see ${LOG_PATH} for more detail.`
 const deleteErrorMessage = `delete error. see ${LOG_PATH} for more detail.`
+
+async function responseForGet ({ response } : {response: http.ServerResponse}) {
+  response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+  const htmlContent = marked(markdownContent)
+  response.write(htmlContent)
+  response.end()
+}
+
+router.get('/', responseForGet)
+router.get('/upload', responseForGet)
 
 router.post('/upload', async ({
   response,
@@ -32,19 +46,19 @@ router.post('/upload', async ({
   urlparams?: URLSearchParams
 }): Promise<void> => {
   try {
-    const picbed = urlparams?.get('picbed')
     const passedKey = urlparams?.get('key')
-    const serverKey = picgo.getConfig('settings.serverKey') || ''
+    const serverKey = picgo.getConfig<string>(configPaths.settings.serverKey) || ''
     if (serverKey && passedKey !== serverKey) {
       handleResponse({
         response,
         body: {
           success: false,
-          message: 'server key is not correct'
+          message: 'server key is uncorrect'
         }
       })
       return
     }
+    const picbed = urlparams?.get('picbed')
     let currentPicBedType = ''
     let currentPicBedConfig = {} as IStringKeyMap
     let currentPicBedConfigId = ''
@@ -176,36 +190,21 @@ router.post('/delete', async ({
     return
   }
   try {
-    // 区分是否是加密的数据，如果不是直接传入list，如果是，解密后再传入
     const treatList = list.map(item => {
-      if (item.isEncrypted) {
-        const aesHelper = new AESHelper()
-        const data = aesHelper.decrypt(item.EncryptedData)
-        return JSON.parse(data)
-      } else {
-        return item
-      }
+      if (!item.isEncrypted) return item
+      const aesHelper = new AESHelper()
+      return JSON.parse(aesHelper.decrypt(item.EncryptedData))
     })
     const result = await deleteChoosedFiles(treatList)
     const successCount = result.filter(item => item).length
-    const failCount = result.filter(item => !item).length
-    if (successCount) {
-      handleResponse({
-        response,
-        body: {
-          success: true,
-          message: `delete success: ${successCount}, fail: ${failCount}`
-        }
-      })
-    } else {
-      handleResponse({
-        response,
-        body: {
-          success: false,
-          message: deleteErrorMessage
-        }
-      })
-    }
+    const failCount = result.length - successCount
+    handleResponse({
+      response,
+      body: {
+        success: !!successCount,
+        message: successCount ? `delete success: ${successCount}, fail: ${failCount}` : deleteErrorMessage
+      }
+    })
   } catch (err: any) {
     logger.error(err)
     handleResponse({
@@ -218,7 +217,7 @@ router.post('/delete', async ({
   }
 })
 
-router.post('/heartbeat', async ({
+router.any('/heartbeat', async ({
   response
 } : {
   response: IHttpResponse,
