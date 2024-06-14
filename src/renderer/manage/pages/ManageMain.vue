@@ -279,36 +279,19 @@
 </template>
 
 <script lang="ts" setup>
-// Vue 相关
-import { ref, reactive, computed, onBeforeMount, watch } from 'vue'
-
-// Electron 相关
 import { shell } from 'electron'
-
-// 支持的图床列表
-import { supportedPicBedList } from '../utils/constants'
-
-// Element Plus 图标
+import { ElNotification } from 'element-plus'
 import { CirclePlus, SuccessFilled, Folder, Switch, Tools, ChromeFilled, HomeFilled, FolderOpened } from '@element-plus/icons-vue'
-
-// Vue Router 相关
+import path from 'path'
+import { ref, reactive, computed, onBeforeMount, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-// Element Plus 通知组件
-import { ElNotification } from 'element-plus'
+import { supportedPicBedList } from '@/manage/utils/constants'
+import { useManageStore } from '@/manage/store/manageStore'
+import { newBucketConfig } from '@/manage/utils/newBucketConfig'
 
-// 数据发送工具函数
-import { invokeToMain } from '../utils/dataSender'
-
-// 新建图床配置
-import { newBucketConfig } from '../utils/newBucketConfig'
-
-// 状态管理相关
-import { useManageStore } from '../store/manageStore'
-
-// 国际化函数
 import { T as $T } from '@/i18n'
-import path from 'path'
+import { invokeToMain } from '@/utils/common'
 
 const manageStore = useManageStore() as any
 const route = useRoute()
@@ -355,7 +338,7 @@ const urlMap : IStringKeyMap = {
   webdavplist: 'https://baike.baidu.com/item/WebDAV/4610909'
 }
 
-const showNewIconList = ['aliyun', 'qiniu', 'tcyun']
+const showNewIconList = ['aliyun', 'qiniu', 'tcyun', 's3plist']
 
 const bucketT = $T('MANAGE_MAIN_PAGE_BUCKET')
 const galleryT = $T('MANAGE_MAIN_PAGE_GALLERY')
@@ -415,6 +398,7 @@ function createNewBucket (picBedName: string) {
   if (currentPicBedName.value === 'tcyun') {
     resultMap.BucketName = `${resultMap.BucketName}-${currentPagePicBedConfig.appId}`
   }
+  resultMap.endpoint = currentPagePicBedConfig.endpoint
   invokeToMain('createBucket', currentAlias, resultMap).then((result: any) => {
     if (result) {
       ElNotification({

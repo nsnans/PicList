@@ -1,36 +1,42 @@
-// External dependencies
-import pkg from 'root/package.json'
+import {
+  app,
+  dialog,
+  BrowserWindow,
+  Menu,
+  shell,
+  MenuItemConstructorOptions,
+  MenuItem
+} from 'electron'
+import { PicGo as PicGoCore } from 'piclist'
 
-// Electron modules
-import { Menu, BrowserWindow, app, dialog, shell } from 'electron'
-
-// Custom utilities and modules
-import windowManager from 'apis/app/window/windowManager'
-import getPicBeds from '~/main/utils/getPicBeds'
+import db from '@core/datastore'
 import picgo from '@core/picgo'
-import GuiApi from 'apis/gui'
-import picgoCoreIPC from '~/main/events/picgoCoreIPC'
-import { changeCurrentUploader } from '~/main/utils/handleUploaderConfig'
-import db from '~/main/apis/core/datastore'
-import clipboardPoll from '~/main/utils/clipboardPoll'
 
-// Custom types/enums
-import { IWindowList } from '#/types/enum'
-
-// External utility functions
 import {
   uploadClipboardFiles
-} from '~/main/apis/app/uploader/apis'
+} from 'apis/app/uploader/apis'
+import windowManager from 'apis/app/window/windowManager'
+import GuiApi from 'apis/gui'
+
+import { handlePluginUninstall, handlePluginUpdate } from '~/events/rpc/routes/plugin/utils'
+import { T } from '~/i18n'
+import clipboardPoll from '~/utils/clipboardPoll'
+import { setTrayToolTip } from '~/utils/common'
+import getPicBeds from '~/utils/getPicBeds'
+import { changeCurrentUploader } from '~/utils/handleUploaderConfig'
+
 import {
   PICGO_CONFIG_PLUGIN,
   PICGO_HANDLE_PLUGIN_DONE,
   PICGO_HANDLE_PLUGIN_ING,
   PICGO_TOGGLE_PLUGIN,
   SHOW_MAIN_PAGE_QRCODE
-} from '~/universal/events/constants'
-import { PicGo as PicGoCore } from 'piclist'
-import { T } from '~/main/i18n'
-import { configPaths } from '~/universal/utils/configPaths'
+} from '#/events/constants'
+import { IWindowList } from '#/types/enum'
+import { configPaths } from '#/utils/configPaths'
+
+import pkg from 'root/package.json'
+import { openMainWindow } from '~/utils/windowHelper'
 
 interface GuiMenuItem {
   label: string
@@ -41,18 +47,10 @@ const buildMiniPageMenu = () => {
   const isListeningClipboard = db.get(configPaths.settings.isListeningClipboard) || false
   const ClipboardWatcher = clipboardPoll
   const submenu = buildPicBedListMenu()
-  const template = [
+  const template: Array<(MenuItemConstructorOptions) | (MenuItem)> = [
     {
       label: T('OPEN_MAIN_WINDOW'),
-      click () {
-        windowManager.get(IWindowList.SETTING_WINDOW)!.show()
-        const autoCloseMiniWindow = db.get(configPaths.settings.autoCloseMiniWindow) || false
-        if (autoCloseMiniWindow) {
-          if (windowManager.has(IWindowList.MINI_WINDOW)) {
-            windowManager.get(IWindowList.MINI_WINDOW)!.hide()
-          }
-        }
-      }
+      click: openMainWindow
     },
     {
       label: T('CHOOSE_DEFAULT_PICBED'),
@@ -66,7 +64,7 @@ const buildMiniPageMenu = () => {
       }
     },
     {
-      label: T('HIDE_WINDOW'),
+      label: T('HIDE_MINI_WINDOW'),
       click () {
         BrowserWindow.getFocusedWindow()!.hide()
       }
@@ -82,7 +80,7 @@ const buildMiniPageMenu = () => {
         })
         buildMiniPageMenu()
       },
-      enabled: !isListeningClipboard
+      visible: !isListeningClipboard
     },
     {
       label: T('STOP_WATCH_CLIPBOARD'),
@@ -92,7 +90,7 @@ const buildMiniPageMenu = () => {
         ClipboardWatcher.removeAllListeners()
         buildMiniPageMenu()
       },
-      enabled: isListeningClipboard
+      visible: isListeningClipboard
     },
     {
       label: T('RELOAD_APP'),
@@ -106,7 +104,6 @@ const buildMiniPageMenu = () => {
       label: T('QUIT')
     }
   ]
-  // @ts-ignore
   return Menu.buildFromTemplate(template)
 }
 
@@ -185,6 +182,7 @@ const buildPicBedListMenu = () => {
               if (windowManager.has(IWindowList.SETTING_WINDOW)) {
                 windowManager.get(IWindowList.SETTING_WINDOW)!.webContents.send('syncPicBed')
               }
+              setTrayToolTip(`${item.type} ${config._configName || 'Default'}`)
             }
           }
         })
@@ -198,6 +196,7 @@ const buildPicBedListMenu = () => {
           if (windowManager.has(IWindowList.SETTING_WINDOW)) {
             windowManager.get(IWindowList.SETTING_WINDOW)!.webContents.send('syncPicBed')
           }
+          setTrayToolTip(item.type)
         }
         : undefined
     }
@@ -264,14 +263,14 @@ const buildPluginPageMenu = (plugin: IPicGoPlugin) => {
     click () {
       const window = windowManager.get(IWindowList.SETTING_WINDOW)!
       window.webContents.send(PICGO_HANDLE_PLUGIN_ING, plugin.fullName)
-      picgoCoreIPC.handlePluginUninstall(plugin.fullName)
+      handlePluginUninstall(plugin.fullName)
     }
   }, {
     label: T('UPDATE_PLUGIN'),
     click () {
       const window = windowManager.get(IWindowList.SETTING_WINDOW)!
       window.webContents.send(PICGO_HANDLE_PLUGIN_ING, plugin.fullName)
-      picgoCoreIPC.handlePluginUpdate(plugin.fullName)
+      handlePluginUpdate(plugin.fullName)
     }
   }]
   for (const i in plugin.config) {
@@ -325,7 +324,6 @@ const buildPluginPageMenu = (plugin: IPicGoPlugin) => {
       menu.push({
         label: i.label,
         click () {
-          // ipcRenderer.send('pluginActions', plugin.fullName, i.label)
           const picgPlugin = picgo.pluginLoader.getPlugin(plugin.fullName)
           if (picgPlugin?.guiMenu?.(picgo)?.length) {
             const menu: GuiMenuItem[] = picgPlugin.guiMenu(picgo)

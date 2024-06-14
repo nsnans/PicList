@@ -62,33 +62,19 @@
 </template>
 
 <script lang="ts" setup>
-// Vue 相关
-import { reactive, ref, onBeforeUnmount, onBeforeMount } from 'vue'
-
-// Electron 相关
 import { clipboard, ipcRenderer } from 'electron'
-
-// 数据库操作
-import $$db from '@/utils/db'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// Picgo Store 相关类型
+import { reactive, ref, onBeforeUnmount, onBeforeMount } from 'vue'
 import { IResult } from '@picgo/store/dist/types'
 
-// 事件常量
-import { OPEN_WINDOW } from '#/events/constants'
+import { T as $T } from '@/i18n/index'
+import { sendRPC, triggerRPC } from '@/utils/common'
+import { getConfig } from '@/utils/dataSender'
 
-// 枚举类型声明
-import { IPasteStyle, IWindowList } from '#/types/enum'
+import $$db from '@/utils/db'
 
-// 数据发送工具函数
-import { getConfig, sendToMain } from '@/utils/dataSender'
-
-// 工具函数
+import { IPasteStyle, IRPCActionType, IWindowList } from '#/types/enum'
 import { handleUrlEncode } from '#/utils/common'
-import { configPaths } from '~/universal/utils/configPaths'
+import { configPaths } from '#/utils/configPaths'
 
 const files = ref<IResult<ImgInfo>[]>([])
 const notification = reactive({
@@ -99,14 +85,12 @@ const notification = reactive({
 const clipboardFiles = ref<ImgInfo[]>([])
 const uploadFlag = ref(false)
 
-// const reverseList = computed(() => files.value.slice().reverse())
-
 function openSettingWindow () {
-  sendToMain(OPEN_WINDOW, IWindowList.SETTING_WINDOW)
+  sendRPC(IRPCActionType.OPEN_WINDOW, IWindowList.SETTING_WINDOW)
 }
 
 async function getData () {
-  files.value = (await $$db.get<ImgInfo>({ orderBy: 'desc', limit: 5 })).data
+  files.value = (await $$db.get<ImgInfo>({ orderBy: 'desc', limit: 5 }))!.data
 }
 
 const formatCustomLink = (customLink: string, item: ImgInfo) => {
@@ -149,7 +133,7 @@ async function pasteTemplate (style: IPasteStyle, item: ImgInfo, customLink: str
   }
   const useShortUrl = await getConfig(configPaths.settings.useShortUrl) || false
   if (useShortUrl) {
-    url = await ipcRenderer.invoke('getShortUrl', url)
+    url = await triggerRPC<string>(IRPCActionType.TRAY_GET_SHORT_URL, url) || url
   }
   notification.body = url
   const _customLink = customLink || '![$fileName]($url)'
@@ -165,10 +149,6 @@ async function pasteTemplate (style: IPasteStyle, item: ImgInfo, customLink: str
   }
   return tpl[style]
 }
-
-// function calcHeight (width: number, height: number): number {
-//   return height * 160 / width
-// }
 
 function disableDragFile () {
   window.addEventListener('dragover', (e) => {
@@ -186,7 +166,7 @@ function uploadClipboardFiles () {
     return
   }
   uploadFlag.value = true
-  sendToMain('uploadClipboardFiles')
+  sendRPC(IRPCActionType.TRAY_UPLOAD_CLIPBOARD_FILES)
 }
 
 onBeforeMount(() => {
@@ -197,13 +177,13 @@ onBeforeMount(() => {
       const item = _files[i]
       await $$db.insert(item)
     }
-    files.value = (await $$db.get<ImgInfo>({ orderBy: 'desc', limit: 5 })).data
+    files.value = (await $$db.get<ImgInfo>({ orderBy: 'desc', limit: 5 }))!.data
   })
   ipcRenderer.on('clipboardFiles', (_: Event, files: ImgInfo[]) => {
     clipboardFiles.value = files
   })
   ipcRenderer.on('uploadFiles', async () => {
-    files.value = (await $$db.get<ImgInfo>({ orderBy: 'desc', limit: 5 })).data
+    files.value = (await $$db.get<ImgInfo>({ orderBy: 'desc', limit: 5 }))!.data
     uploadFlag.value = false
   })
   ipcRenderer.on('updateFiles', () => {

@@ -95,45 +95,25 @@
     </el-row>
   </div>
 </template>
+
 <script lang="ts" setup>
-// 枚举类型声明
-import { II18nLanguage, IRPCActionType } from '~/universal/types/enum'
-
-// Vue 相关
-import { ref, onBeforeUnmount, onBeforeMount } from 'vue'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// 数据发送工具函数
-import { getConfig, sendToMain, triggerRPC } from '@/utils/dataSender'
-
-// Vue Router 相关
+import dayjs from 'dayjs'
+import {
+  clipboard
+} from 'electron'
+import { ElDropdown, ElMessage } from 'element-plus'
+import { Link } from '@element-plus/icons-vue'
+import { ref, onBeforeMount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-// 组件
 import ConfigForm from '@/components/ConfigForm.vue'
+import { T as $T } from '@/i18n/index'
+import { sendRPC, triggerRPC } from '@/utils/common'
+import { getConfig } from '@/utils/dataSender'
 
-// Electron 相关
-import {
-  clipboard,
-  ipcRenderer,
-  IpcRendererEvent
-} from 'electron'
-
-// 事件常量
-import { OPEN_URL } from '~/universal/events/constants'
-
-// Element Plus 图标
-import { Link } from '@element-plus/icons-vue'
-
-// 时间处理库
-import dayjs from 'dayjs'
-
-// Element Plus 下拉菜单组件
-import { ElDropdown, ElMessage } from 'element-plus'
-import { configPaths } from '~/universal/utils/configPaths'
-import { picBedManualUrlList } from '~/universal/utils/static'
+import { II18nLanguage, IRPCActionType } from '#/types/enum'
+import { configPaths } from '#/utils/configPaths'
+import { picBedManualUrlList } from '#/utils/static'
 
 const type = ref('')
 const config = ref<IPicGoPluginConfig[]>([])
@@ -146,15 +126,14 @@ const $dropdown = ref<InstanceType<typeof ElDropdown> | null>(null)
 type.value = $route.params.type as string
 
 onBeforeMount(async () => {
-  sendToMain('getPicBedConfig', $route.params.type)
-  ipcRenderer.on('getPicBedConfig', getPicBeds)
+  await getPicBeds()
   await getPicBedConfigList()
 })
 
 const handleConfirm = async () => {
   const result = (await $configForm.value?.validate()) || false
   if (result !== false) {
-    await triggerRPC<void>(IRPCActionType.UPDATE_UPLOADER_CONFIG, type.value, result?._id, result)
+    await triggerRPC<void>(IRPCActionType.UPLOADER_UPDATE_CONFIG, type.value, result?._id, result)
     const successNotification = new Notification($T('SETTINGS_RESULT'), {
       body: $T('TIPS_SET_SUCCEED')
     })
@@ -173,8 +152,14 @@ function handleMouseLeave () {
   $dropdown.value?.handleClose()
 }
 
+async function getPicBeds () {
+  const result = await triggerRPC<any>(IRPCActionType.PICBED_GET_PICBED_CONFIG, $route.params.type)
+  config.value = result.config
+  picBedName.value = result.name
+}
+
 async function getPicBedConfigList () {
-  const res = await triggerRPC<IUploaderConfigItem>(IRPCActionType.GET_PICBED_CONFIG_LIST, type.value) || undefined
+  const res = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_GET_CONFIG_LIST, type.value) || undefined
   const configList = res?.configList || []
   picBedConfigList.value = configList.filter((item) => item._id !== $route.params.configId)
 }
@@ -191,7 +176,7 @@ async function handleConfigImport (configItem: IUploaderConfigListItem) {
 }
 
 const handleReset = async () => {
-  await triggerRPC<void>(IRPCActionType.RESET_UPLOADER_CONFIG, type.value, $route.params.configId)
+  await triggerRPC<void>(IRPCActionType.UPLOADER_RESET_CONFIG, type.value, $route.params.configId)
   const successNotification = new Notification($T('SETTINGS_RESULT'), {
     body: $T('TIPS_RESET_SUCCEED')
   })
@@ -205,7 +190,7 @@ async function handleNameClick () {
   const lang = await getConfig(configPaths.settings.language) || II18nLanguage.ZH_CN
   const url = picBedManualUrlList[lang === II18nLanguage.EN ? 'en' : 'zh_cn'][$route.params.type as string]
   if (url) {
-    sendToMain(OPEN_URL, url)
+    sendRPC(IRPCActionType.OPEN_URL, url)
   }
 }
 
@@ -213,7 +198,7 @@ async function handleCopyApi () {
   try {
     const { port = 36677, host = '127.0.0.1' } = await getConfig<IStringKeyMap>(configPaths.settings.server) || {}
     const serverKey = await getConfig(configPaths.settings.serverKey) || ''
-    const uploader = await getConfig('uploader') as IStringKeyMap || {}
+    const uploader = await getConfig(configPaths.uploader) as IStringKeyMap || {}
     const picBedConfigList = uploader[$route.params.type as string].configList || []
     const picBedConfig = picBedConfigList.find((item: IUploaderConfigListItem) => item._id === $route.params.configId)
     if (!picBedConfig) {
@@ -228,22 +213,14 @@ async function handleCopyApi () {
     ElMessage.error('Copy failed')
   }
 }
-
-function getPicBeds (_event: IpcRendererEvent, _config: IPicGoPluginConfig[], name: string) {
-  config.value = _config
-  picBedName.value = name
-}
-
-onBeforeUnmount(() => {
-  ipcRenderer.removeListener('getPicBedConfig', getPicBeds)
-})
-
 </script>
+
 <script lang="ts">
 export default {
   name: 'PicbedsPage'
 }
 </script>
+
 <style lang='stylus'>
 #picbeds-page
   height 100%

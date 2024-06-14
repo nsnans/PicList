@@ -1,17 +1,12 @@
-// External dependencies
-import windowList from './windowList'
-
-// Electron modules
 import { BrowserWindow } from 'electron'
 
-// Custom utilities and modules
-
-// Custom types/enums
+import windowList from 'apis/app/window/windowList'
 import { IWindowList } from '#/types/enum'
 
 class WindowManager implements IWindowManager {
   #windowMap: Map<IWindowList | string, BrowserWindow> = new Map()
   #windowIdMap: Map<number, IWindowList | string> = new Map()
+
   create (name: IWindowList) {
     const windowConfig: IWindowListItem = windowList.get(name)!
     if (windowConfig.isValid) {

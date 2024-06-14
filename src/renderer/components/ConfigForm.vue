@@ -46,7 +46,7 @@
                   />
                 </template>
                 <el-icon class="ml-[4px] cursor-pointer hover:text-blue">
-                  <QuestionFilled />
+                  <InfoFilled />
                 </el-icon>
               </el-tooltip>
             </template>
@@ -99,15 +99,16 @@
     </el-form>
   </div>
 </template>
+
 <script lang="ts" setup>
-import { reactive, ref, watch, toRefs } from 'vue'
-import { cloneDeep, union } from 'lodash'
-import { getConfig } from '@/utils/dataSender'
-import { useRoute } from 'vue-router'
 import type { FormInstance } from 'element-plus'
-import { T as $T } from '@/i18n'
-import { QuestionFilled } from '@element-plus/icons-vue'
+import { cloneDeep, union } from 'lodash'
 import { marked } from 'marked'
+import { reactive, ref, watch, toRefs } from 'vue'
+import { useRoute } from 'vue-router'
+import { InfoFilled } from '@element-plus/icons-vue'
+
+import { getConfig } from '@/utils/dataSender'
 
 interface IProps {
   config: any[]
@@ -141,7 +142,6 @@ async function validate (): Promise<IStringKeyMap | false> {
         resolve(ruleForm)
       } else {
         resolve(false)
-        return false
       }
     })
   })

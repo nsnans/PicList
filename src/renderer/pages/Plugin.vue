@@ -80,7 +80,7 @@
       >
         <div
           class="plugin-item"
-          :class="{ 'darwin': os === 'darwin' }"
+          :class="{ 'darwin': osGlobal === 'darwin' }"
         >
           <div
             v-if="!item.gui"
@@ -227,54 +227,33 @@
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// Element Plus 图标
-import { Close, Download, Refresh, Goods, Remove, Tools } from '@element-plus/icons-vue'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// 组件
-import ConfigForm from '@/components/ConfigFormForPlugin.vue'
-
-// Lodash 函数节流
-import { debounce, DebouncedFunc } from 'lodash'
-
-// Electron 相关
+import axios from 'axios'
 import {
   ipcRenderer,
   IpcRendererEvent
 } from 'electron'
+import { ElMessageBox } from 'element-plus'
+import { debounce, DebouncedFunc } from 'lodash'
+import { Close, Download, Refresh, Goods, Remove, Tools } from '@element-plus/icons-vue'
+import { computed, ref, onBeforeMount, onBeforeUnmount, watch, onMounted, reactive, toRaw } from 'vue'
 
-// 工具函数
-import { handleStreamlinePluginName } from '~/universal/utils/common'
+import ConfigForm from '@/components/ConfigFormForPlugin.vue'
+import { T as $T } from '@/i18n/index'
+import { sendRPC } from '@/utils/common'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import { osGlobal, updatePicBedGlobal } from '@/utils/global'
 
-// 事件常量
 import {
-  OPEN_URL,
   PICGO_CONFIG_PLUGIN,
   PICGO_HANDLE_PLUGIN_ING,
   PICGO_TOGGLE_PLUGIN,
-  SHOW_PLUGIN_PAGE_MENU,
-  GET_PICBEDS,
   PICGO_HANDLE_PLUGIN_DONE
 } from '#/events/constants'
-
-// Vue 相关
-import { computed, ref, onBeforeMount, onBeforeUnmount, watch, onMounted, reactive, toRaw } from 'vue'
-
-// 数据发送工具函数
-import { getConfig, saveConfig, sendRPC, sendToMain } from '@/utils/dataSender'
-
-// Element Plus 消息框组件
-import { ElMessageBox } from 'element-plus'
-
-// Axios
-import axios from 'axios'
-
-// 枚举类型声明
-import { IRPCActionType } from '~/universal/types/enum'
-import { configPaths } from '~/universal/utils/configPaths'
+import { IRPCActionType } from '#/types/enum'
+import { handleStreamlinePluginName } from '#/utils/common'
+import { configPaths } from '#/utils/configPaths'
 
 const $confirm = ElMessageBox.confirm
 const searchText = ref('')
@@ -291,7 +270,6 @@ const pluginListToolTip = $T('PLUGIN_LIST')
 const importLocalPluginToolTip = $T('PLUGIN_IMPORT_LOCAL')
 const updateAllToolTip = $T('PLUGIN_UPDATE_ALL')
 // const id = ref('')
-const os = ref('')
 const defaultLogo = ref(`this.src="file://${__static.replace(/\\/g, '/')}/roundLogo.png"`)
 const $configForm = ref<InstanceType<typeof ConfigForm> | null>(null)
 const npmSearchText = computed(() => {
@@ -333,7 +311,6 @@ async function getLatestVersionOfPlugIn (pluginName: string) {
 }
 
 onBeforeMount(async () => {
-  os.value = process.platform
   ipcRenderer.on('hideLoading', () => {
     loading.value = false
   })
@@ -372,7 +349,7 @@ onBeforeMount(async () => {
         item.ing = false
         item.hasInstall = true
       }
-      getPicBeds()
+      updatePicBedGlobal()
     })
     handleReload()
     getPluginList()
@@ -387,7 +364,7 @@ onBeforeMount(async () => {
         if (item.config.uploader.name) {
           handleRestoreState('uploader', item.config.uploader.name)
         }
-        getPicBeds()
+        updatePicBedGlobal()
       }
       return item.fullName !== plugin
     })
@@ -411,7 +388,7 @@ onBeforeMount(async () => {
     const plugin = pluginList.value.find(item => item.fullName === fullName)
     if (plugin) {
       plugin.enabled = enabled
-      getPicBeds()
+      updatePicBedGlobal()
       needReload.value = true
     }
   })
@@ -421,7 +398,7 @@ onBeforeMount(async () => {
 })
 
 async function buildContextMenu (plugin: IPicGoPlugin) {
-  sendToMain(SHOW_PLUGIN_PAGE_MENU, plugin)
+  sendRPC(IRPCActionType.SHOW_PLUGIN_PAGE_MENU, plugin)
 }
 
 function handleResize () {
@@ -436,11 +413,7 @@ onMounted(() => {
 })
 
 function getPluginList () {
-  sendToMain('getPluginList')
-}
-
-function getPicBeds () {
-  sendToMain(GET_PICBEDS)
+  sendRPC(IRPCActionType.PLUGIN_GET_LIST)
 }
 
 function installPlugin (item: IPicGoPlugin) {
@@ -451,35 +424,15 @@ function installPlugin (item: IPicGoPlugin) {
       type: 'warning'
     }).then(() => {
       item.ing = true
-      sendToMain('installPlugin', item.fullName)
+      sendRPC(IRPCActionType.PLUGIN_INSTALL, item.fullName)
     }).catch(() => {
       console.log('Install canceled')
     })
   } else {
     item.ing = true
-    sendToMain('installPlugin', item.fullName)
+    sendRPC(IRPCActionType.PLUGIN_INSTALL, item.fullName)
   }
 }
-
-// function uninstallPlugin (val: string) {
-//   pluginList.value.forEach(item => {
-//     if (item.name === val) {
-//       item.ing = true
-//     }
-//   })
-//   loading.value = true
-//   sendToMain('uninstallPlugin', val)
-// }
-
-// function updatePlugin (val: string) {
-//   pluginList.value.forEach(item => {
-//     if (item.fullName === val) {
-//       item.ing = true
-//     }
-//   })
-//   loading.value = true
-//   sendToMain('updatePlugin', val)
-// }
 
 function reloadApp () {
   sendRPC(IRPCActionType.RELOAD_APP)
@@ -534,7 +487,6 @@ async function handleConfirmConfig () {
 }
 
 function _getSearchResult (val: string) {
-  // this.$http.get(`https://api.npms.io/v2/search?q=${val}`)
   axios.get(`https://registry.npmjs.com/-/v1/search?text=${val}`)
     .then((res: INPMSearchResult) => {
       pluginList.value = res.data.objects
@@ -598,21 +550,21 @@ async function handleRestoreState (item: string, name: string) {
 
 function openHomepage (url: string) {
   if (url) {
-    sendToMain(OPEN_URL, url)
+    sendRPC(IRPCActionType.OPEN_URL, url)
   }
 }
 
 function goAwesomeList () {
-  sendToMain(OPEN_URL, 'https://github.com/PicGo/Awesome-PicGo')
+  sendRPC(IRPCActionType.OPEN_URL, 'https://github.com/PicGo/Awesome-PicGo')
 }
 
 function handleImportLocalPlugin () {
-  sendToMain('importLocalPlugin')
+  sendRPC(IRPCActionType.PLUGIN_IMPORT_LOCAL)
   loading.value = true
 }
 
 function handleUpdateAllPlugin () {
-  sendToMain('updateAllPlugin', toRaw(pluginNameList.value))
+  sendRPC(IRPCActionType.PLUGIN_UPDATE_ALL, toRaw(pluginNameList.value))
 }
 
 onBeforeUnmount(() => {

@@ -1,35 +1,18 @@
-// Axios
+
 import axios from 'axios'
-
-// 加密函数、获取文件 MIME 类型、新的下载器、错误格式化函数、并发异步任务池
-import { hmacSha1Base64, getFileMimeType, NewDownloader, formatError, ConcurrencyPromisePool } from '../utils/common'
-
-// 七牛云客户端库
+import { ipcMain, IpcMainEvent } from 'electron'
+import path from 'path'
 import qiniu from 'qiniu/index'
 
-// 路径处理库
-import path from 'path'
-
-// 是否为图片的判断函数
-import { isImage } from '~/renderer/manage/utils/common'
-
-// 窗口管理器
 import windowManager from 'apis/app/window/windowManager'
 
-// 枚举类型声明
-import { IWindowList } from '#/types/enum'
+import UpDownTaskQueue from '~/manage/datastore/upDownTaskQueue'
+import { hmacSha1Base64, getFileMimeType, NewDownloader, formatError, ConcurrencyPromisePool } from '~/manage/utils/common'
+import { ManageLogger } from '~/manage/utils/logger'
 
-// Electron 相关
-import { ipcMain, IpcMainEvent } from 'electron'
-
-// 上传下载任务队列
-import UpDownTaskQueue, { uploadTaskSpecialStatus, commonTaskStatus } from '../datastore/upDownTaskQueue'
-
-// 日志记录器
-import { ManageLogger } from '../utils/logger'
-
-// 取消下载任务的加载文件列表、刷新下载文件传输列表
-import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '@/manage/utils/static'
+import { commonTaskStatus, IWindowList, uploadTaskSpecialStatus } from '#/types/enum'
+import { isImage } from '#/utils/common'
+import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '#/utils/static'
 
 class QiniuApi {
   mac: qiniu.auth.digest.Mac
@@ -52,10 +35,11 @@ class QiniuApi {
     this.logger = logger
   }
 
-  formatFolder (item: string, slicedPrefix: string) {
+  formatFolder (item: string, slicedPrefix: string, urlPrefix: string) {
     return {
       Key: item,
       key: item,
+      url: `${urlPrefix}/${item}`,
       fileSize: 0,
       fileName: item.replace(slicedPrefix, '').replace('/', ''),
       isDir: true,
@@ -342,7 +326,7 @@ class QiniuApi {
       })
       if (res && res.respInfo.statusCode === 200) {
         res.respBody && res.respBody.commonPrefixes && res.respBody.commonPrefixes.forEach((item: any) => {
-          result.fullList.push(this.formatFolder(item, slicedPrefix))
+          result.fullList.push(this.formatFolder(item, slicedPrefix, urlPrefix))
         })
         res.respBody && res.respBody.items && res.respBody.items.forEach((item: any) => {
           item.fsize !== 0 && result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
@@ -409,7 +393,7 @@ class QiniuApi {
     if (res?.respInfo?.statusCode === 200) {
       if (res.respBody?.commonPrefixes) {
         res.respBody.commonPrefixes.forEach((item: string) => {
-          result.fullList.push(this.formatFolder(item, slicedPrefix))
+          result.fullList.push(this.formatFolder(item, slicedPrefix, urlPrefix))
         })
       }
       if (res.respBody?.items) {

@@ -1,5 +1,6 @@
-import { deleteFailedLog, deleteLog } from '@/utils/common'
 import Qiniu from 'qiniu'
+
+import { deleteFailedLog, deleteLog } from '#/utils/deleteLog'
 
 interface IConfigMap {
   fileName: string

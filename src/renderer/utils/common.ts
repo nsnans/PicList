@@ -1,13 +1,19 @@
-import { isReactive, isRef, toRaw, unref } from 'vue'
 import { ipcRenderer } from 'electron'
-import { OPEN_URL } from '~/universal/events/constants'
-import { ILogType } from '~/universal/types/enum'
+import { isReactive, isRef, toRaw, unref } from 'vue'
+
+import { RPC_ACTIONS, RPC_ACTIONS_INVOKE } from '#/events/constants'
+import { IRPCActionType } from '#/types/enum'
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
+
 export const handleTalkingDataEvent = (data: ITalkingDataOptions) => {
   const { EventId, Label = '', MapKv = {} } = data
   MapKv.from = window.location.href
-  window.TDAPP.onEvent(EventId, Label, MapKv)
+  try {
+    window.TDAPP.onEvent(EventId, Label, MapKv)
+  } catch (e) {
+    console.error(e)
+  }
   if (isDevelopment) {
     console.log('talkingData', data)
   }
@@ -30,20 +36,36 @@ export const getRawData = (args: any): any => {
   return args
 }
 
-function sendToMain (channel: string, ...args: any[]) {
+export function sendToMain (channel: string, ...args: any[]) {
   const data = getRawData(args)
   ipcRenderer.send(channel, ...data)
 }
 
-export const openURL = (url: string) => {
-  sendToMain(OPEN_URL, url)
+/**
+ * send a rpc request & do not need to wait for the response
+ *
+ * or the response will be handled by other listener
+ */
+export function sendRPC (action: IRPCActionType, ...args: any[]): void {
+  const data = getRawData(args)
+  ipcRenderer.send(RPC_ACTIONS, action, data)
 }
 
-export const deleteLog = (fileName?: string, type?: string, isSuccess = true, msg?: string) => {
-  ipcRenderer.send('logDeleteMsg', msg || `Delete ${fileName} on ${type} success`, isSuccess ? ILogType.success : ILogType.error)
+export function sendRpcSync (action: IRPCActionType, ...args: any[]) {
+  const data = getRawData(args)
+  return ipcRenderer.sendSync(RPC_ACTIONS, action, data)
 }
 
-export const deleteFailedLog = (fileName: string, type: string, error: any) => {
-  deleteLog(fileName, type, false)
-  ipcRenderer.send('logDeleteMsg', error, ILogType.error)
+export function invokeToMain (channel: string, ...args: any[]) {
+  const data = getRawData(args)
+  return ipcRenderer.invoke(channel, ...data)
+}
+
+/**
+   * trigger RPC action
+   * TODO: create an isolate rpc handler
+   */
+export async function triggerRPC<T> (action: IRPCActionType, ...args: any[]): Promise<T | undefined> {
+  const data = getRawData(args)
+  return await ipcRenderer.invoke(RPC_ACTIONS_INVOKE, action, data)
 }

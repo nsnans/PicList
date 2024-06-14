@@ -74,13 +74,13 @@
                       :value="'quiet'"
                     />
                     <el-option
-                      v-if="os !== 'darwin'"
+                      v-if="osGlobal !== 'darwin'"
                       key="mini"
                       :label="$T('SETTINGS_START_MODE_MINI')"
                       :value="'mini'"
                     />
                     <el-option
-                      v-if="os === 'darwin'"
+                      v-if="osGlobal === 'darwin'"
                       key="no-tray"
                       :label="$T('SETTINGS_START_MODE_NO_TRAY')"
                       :value="'no-tray'"
@@ -113,11 +113,11 @@
                   </el-select>
                 </el-form-item>
                 <el-form-item
-                  v-if="os === 'darwin'"
+                  v-if="osGlobal === 'darwin'"
                   :label="$T('SETTINGS_ISHIDEDOCK')"
                 >
                   <el-switch
-                    v-model="form.isHideDock"
+                    v-model="formOfSetting.isHideDock"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
                     @change="handleHideDockChange"
@@ -136,51 +136,48 @@
                   </el-button>
                 </el-form-item>
                 <el-form-item
-                  v-if="os !== 'darwin'"
+                  v-if="osGlobal !== 'darwin'"
                   :label="$T('SETTINGS_CLOSE_MINI_WINDOW_SYNC')"
                 >
                   <el-switch
-                    v-model="form.autoCloseMiniWindow"
+                    v-model="formOfSetting.autoCloseMiniWindow"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleAutoCloseMiniWindowChange"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="os !== 'darwin'"
+                  v-if="osGlobal !== 'darwin'"
                   :label="$T('SETTINGS_CLOSE_MAIN_WINDOW_SYNC')"
                 >
                   <el-switch
-                    v-model="form.autoCloseMainWindow"
+                    v-model="formOfSetting.autoCloseMainWindow"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleAutoCloseMainWindowChange"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="os !== 'darwin'"
+                  v-if="osGlobal !== 'darwin'"
                   :label="$T('SETTINGS_MINI_WINDOW_ON_TOP')"
                 >
                   <el-switch
-                    v-model="form.miniWindowOntop"
+                    v-model="formOfSetting.miniWindowOntop"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
                     @change="handleMiniWindowOntop"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="os !== 'darwin'"
+                  v-if="osGlobal !== 'darwin'"
                   :label="$T('SETTINGS_CUSTOM_MINI_ICON')"
                 >
                   <el-switch
-                    v-model="form.isCustomMiniIcon"
+                    v-model="formOfSetting.isCustomMiniIcon"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleIsCustomMiniIcon"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="os !== 'darwin' && form.isCustomMiniIcon"
+                  v-if="osGlobal !== 'darwin' && formOfSetting.isCustomMiniIcon"
                   :label="$T('SETTINGS_CUSTOM_MINI_ICON_PATH')"
                 >
                   <el-button
@@ -196,7 +193,7 @@
                   :label="$T('SETTINGS_LAUNCH_ON_BOOT')"
                 >
                   <el-switch
-                    v-model="form.autoStart"
+                    v-model="formOfSetting.autoStart"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
                     @change="handleAutoStartChange"
@@ -320,28 +317,26 @@
                   :label="$T('SETTINGS_AUTO_IMPORT')"
                 >
                   <el-switch
-                    v-model="form.autoImport"
+                    v-model="formOfSetting.autoImport"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="autoImportChange"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="form.autoImport"
+                  v-if="formOfSetting.autoImport"
                   :label="$T('SETTINGS_AUTO_IMPORT_SELECT_PICBED')"
                 >
                   <el-select
-                    v-model="form.autoImportPicBed"
+                    v-model="formOfSetting.autoImportPicBed"
                     multiple
                     size="small"
                     style="width: 50%"
                     :placeholder="$T('SETTINGS_AUTO_IMPORT_SELECT_PICBED')"
                     :persistent="false"
                     teleported
-                    @change="handleAutoImportPicBedChange"
                   >
                     <el-option
-                      v-for="item in picBed"
+                      v-for="item in picBedGlobal"
                       :key="item.type"
                       :label="item.name"
                       :value="item.type"
@@ -352,30 +347,27 @@
                   :label="$T('SETTINGS_SYNC_DELETE_CLOUD')"
                 >
                   <el-switch
-                    v-model="form.deleteCloudFile"
+                    v-model="formOfSetting.deleteCloudFile"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleDeleteCloudFile"
                   />
                 </el-form-item>
                 <el-form-item
                   :label="$T('SETTINGS_OPEN_UPLOAD_TIPS')"
                 >
                   <el-switch
-                    v-model="form.uploadNotification"
+                    v-model="formOfSetting.uploadNotification"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleUploadNotification"
                   />
                 </el-form-item>
                 <el-form-item
                   :label="$T('SETTINGS_OPEN_UPLOAD_RESULT_TIPS')"
                 >
                   <el-switch
-                    v-model="form.uploadResultNotification"
+                    v-model="formOfSetting.uploadResultNotification"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleUploadResultNotification"
                   />
                 </el-form-item>
                 <el-form-item
@@ -394,20 +386,18 @@
                   :label="$T('SETTINGS_RENAME_BEFORE_UPLOAD')"
                 >
                   <el-switch
-                    v-model="form.rename"
+                    v-model="formOfSetting.rename"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleRename"
                   />
                 </el-form-item>
                 <el-form-item
                   :label="$T('SETTINGS_TIMESTAMP_RENAME')"
                 >
                   <el-switch
-                    v-model="form.autoRename"
+                    v-model="formOfSetting.autoRename"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleAutoRename"
                   />
                 </el-form-item>
                 <el-form-item
@@ -426,20 +416,18 @@
                   :label="$T('SETTINGS_DELETE_LOCAL_FILE_AFTER_UPLOAD')"
                 >
                   <el-switch
-                    v-model="form.deleteLocalFile"
+                    v-model="formOfSetting.deleteLocalFile"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleDeleteLocalFile"
                   />
                 </el-form-item>
                 <el-form-item
                   :label="$T('SETTINGS_AUTO_COPY_URL_AFTER_UPLOAD')"
                 >
                   <el-switch
-                    v-model="form.autoCopyUrl"
+                    v-model="formOfSetting.autoCopy"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleAutoCopyUrl"
                   />
                 </el-form-item>
                 <el-form-item
@@ -458,14 +446,13 @@
                   :label="$T('SETTINGS_SHORT_URL')"
                 >
                   <el-switch
-                    v-model="form.useShortUrl"
+                    v-model="formOfSetting.useShortUrl"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleUseShortUrl"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="form.useShortUrl"
+                  v-if="formOfSetting.useShortUrl"
                   :label="$T('SETTINGS_SHORT_URL_SERVER')"
                 >
                   <el-select
@@ -486,61 +473,56 @@
                   </el-select>
                 </el-form-item>
                 <el-form-item
-                  v-if="form.useShortUrl && form.shortUrlServer === 'c1n'"
+                  v-if="formOfSetting.useShortUrl && formOfSetting.shortUrlServer === 'c1n'"
                   :label="$T('SETTINGS_SHORT_URL_C1N_TOKEN')"
                 >
                   <el-input
-                    v-model="form.c1nToken"
+                    v-model="formOfSetting.c1nToken"
                     size="small"
                     style="width: 50%"
                     :placeholder="$T('SETTINGS_SHORT_URL_C1N_TOKEN')"
-                    @change="handleC1nTokenChange"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="form.useShortUrl && form.shortUrlServer === 'yourls'"
+                  v-if="formOfSetting.useShortUrl && formOfSetting.shortUrlServer === 'yourls'"
                   :label="$T('SETTINGS_SHORT_URL_YOURLS_DOMAIN')"
                 >
                   <el-input
-                    v-model="form.yourlsDomain"
+                    v-model="formOfSetting.yourlsDomain"
                     size="small"
                     style="width: 50%"
                     :placeholder="$T('SETTINGS_SHORT_URL_YOURLS_DOMAIN')"
-                    @change="handleYourlsDomainChange"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="form.useShortUrl && form.shortUrlServer === 'yourls'"
+                  v-if="formOfSetting.useShortUrl && formOfSetting.shortUrlServer === 'yourls'"
                   :label="$T('SETTINGS_SHORT_URL_YOURLS_SIGNATURE')"
                 >
                   <el-input
-                    v-model="form.yourlsSignature"
+                    v-model="formOfSetting.yourlsSignature"
                     size="small"
                     style="width: 50%"
                     :placeholder="$T('SETTINGS_SHORT_URL_YOURLS_SIGNATURE')"
-                    @change="handleYourlsSignatureChange"
                   />
                 </el-form-item>
                 <el-form-item
-                  v-if="form.useShortUrl && form.shortUrlServer === 'cf_worker'"
+                  v-if="formOfSetting.useShortUrl && formOfSetting.shortUrlServer === 'cf_worker'"
                   :label="$T('SETTINGS_SHORT_URL_CF_WORKER_HOST')"
                 >
                   <el-input
-                    v-model="form.cfWorkerHost"
+                    v-model="formOfSetting.cfWorkerHost"
                     size="small"
                     style="width: 50%"
                     :placeholder="$T('SETTINGS_SHORT_URL_CF_WORKER_HOST')"
-                    @change="handleCfWorkerHostChange"
                   />
                 </el-form-item>
                 <el-form-item
                   :label="$T('SETTINGS_ENCODE_OUTPUT_URL')"
                 >
                   <el-switch
-                    v-model="form.encodeOutputURL"
+                    v-model="formOfSetting.encodeOutputURL"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleEncodeOutputURL"
                   />
                 </el-form-item>
                 <el-form-item>
@@ -556,26 +538,24 @@
                         teleported
                       >
                         <el-icon style="margin-left: 4px">
-                          <QuestionFilled />
+                          <InfoFilled />
                         </el-icon>
                       </el-tooltip>
                     </el-row>
                   </template>
                   <el-switch
-                    v-model="form.useBuiltinClipboard"
+                    v-model="formOfSetting.useBuiltinClipboard"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="useBuiltinClipboardChange"
                   />
                 </el-form-item>
                 <el-form-item
                   :label="$T('SETTINGS_WATCH_CLIPBOARD')"
                 >
                   <el-switch
-                    v-model="form.isAutoListenClipboard"
+                    v-model="formOfSetting.isAutoListenClipboard"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="handleIsAutoListenClipboard"
                   />
                 </el-form-item>
                 <el-form-item
@@ -583,13 +563,14 @@
                   :label="$T('CHOOSE_SHOWED_PICBED')"
                 >
                   <el-checkbox-group
-                    v-model="form.showPicBedList"
+                    v-model="showPicBedList"
                     @change="handleShowPicBedListChange"
                   >
                     <el-checkbox
-                      v-for="item in picBed"
+                      v-for="item in picBedGlobal"
                       :key="item.name"
                       :label="item.name"
+                      :value="item.name"
                     />
                   </el-checkbox-group>
                 </el-form-item>
@@ -682,7 +663,7 @@
                   :label="$T('SETTINGS_SET_SERVER_AES_KEY')"
                 >
                   <el-input
-                    v-model.trim="form.aesPassword"
+                    v-model.trim="formOfSetting.aesPassword"
                     type="input"
                     :placeholder="$T('SETTINGS_SET_SERVER_AES_KEY')"
                     size="small"
@@ -727,10 +708,9 @@
                   :label="$T('SETTINGS_OPEN_UPDATE_HELPER')"
                 >
                   <el-switch
-                    v-model="form.updateHelper"
+                    v-model="formOfSetting.showUpdateTip"
                     :active-text="$T('SETTINGS_OPEN')"
                     :inactive-text="$T('SETTINGS_CLOSE')"
-                    @change="updateHelperChange"
                   />
                 </el-form-item>
               </el-form>
@@ -801,7 +781,6 @@
     >
       <el-form
         label-position="right"
-        :model="customLink"
         label-width="120px"
       >
         <el-form-item
@@ -809,6 +788,7 @@
         >
           <el-input
             v-model="proxy"
+            clearable
             :autofocus="true"
             :placeholder="`${$T('SETTINGS_TIPS_SUCH_AS')}：http://127.0.0.1:1080`"
           />
@@ -817,8 +797,8 @@
           :label="$T('SETTINGS_PLUGIN_INSTALL_PROXY')"
         >
           <el-input
-            v-model="npmProxy"
-            :autofocus="true"
+            v-model="formOfSetting.proxy"
+            clearable
             :placeholder="`${$T('SETTINGS_TIPS_SUCH_AS')}：http://127.0.0.1:1080`"
           />
         </el-form-item>
@@ -826,27 +806,12 @@
           :label="$T('SETTINGS_PLUGIN_INSTALL_MIRROR')"
         >
           <el-input
-            v-model="npmRegistry"
-            :autofocus="true"
+            v-model="formOfSetting.registry"
+            clearable
             :placeholder="`${$T('SETTINGS_TIPS_SUCH_AS')}：https://registry.npmmirror.com`"
           />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button
-          round
-          @click="cancelProxy"
-        >
-          {{ $T('CANCEL') }}
-        </el-button>
-        <el-button
-          type="primary"
-          round
-          @click="confirmProxy"
-        >
-          {{ $T('CONFIRM') }}
-        </el-button>
-      </template>
     </el-dialog>
     <el-dialog
       v-model="mainWindowSizeVisible"
@@ -859,14 +824,13 @@
     >
       <el-form
         label-position="right"
-        :model="customLink"
         label-width="120px"
       >
         <el-form-item
           :label="$T('SETTINGS_MAIN_WINDOW_SIZE_WIDTH')"
         >
           <el-input
-            v-model="mainWindowWidth"
+            v-model="formOfSetting.mainWindowWidth"
             :autofocus="true"
             :placeholder="$T('SETTINGS_MAIN_WINDOW_WIDTH_HINT')"
           />
@@ -875,7 +839,7 @@
           :label="$T('SETTINGS_MAIN_WINDOW_SIZE_HEIGHT')"
         >
           <el-input
-            v-model="mainWindowHeight"
+            v-model="formOfSetting.mainWindowHeight"
             :autofocus="true"
             :placeholder="$T('SETTINGS_MAIN_WINDOW_HEIGHT_HINT')"
           />
@@ -1088,7 +1052,7 @@
           :label="$T('SETTINGS_LOG_LEVEL')"
         >
           <el-select
-            v-model="form.logLevel"
+            v-model="formOfSetting.logLevel"
             multiple
             collapse-tags
             style="width: 100%;"
@@ -1108,7 +1072,7 @@
           :label="`${$T('SETTINGS_LOG_FILE_SIZE')} (MB)`"
         >
           <el-input-number
-            v-model="form.logFileSizeLimit"
+            v-model="formOfSetting.logFileSizeLimit"
             style="width: 100%;"
             :placeholder="`${$T('SETTINGS_TIPS_SUCH_AS')}：10`"
             :controls="false"
@@ -1181,10 +1145,9 @@
             :label="$T('SETTINGS_SET_SERVER_KEY')"
           >
             <el-input
-              v-model="form.serverKey"
+              v-model="formOfSetting.serverKey"
               type="input"
               :placeholder="$T('SETTINGS_TIP_PLACEHOLDER_KEY')"
-              @change="handleServerKeyChange"
             />
           </el-form-item>
         </template>
@@ -1227,28 +1190,26 @@
           :label="$T('SETTINGS_SET_ENABLE_WEB_SERVER')"
         >
           <el-switch
-            v-model="form.enableWebServer"
+            v-model="formOfSetting.enableWebServer"
             :active-text="$T('SETTINGS_OPEN')"
             :inactive-text="$T('SETTINGS_CLOSE')"
-            @change="handleEnableWebServerChange"
           />
         </el-form-item>
-        <template v-if="form.enableWebServer">
+        <template v-if="formOfSetting.enableWebServer">
           <el-form-item
             :label="$T('SETTINGS_SET_WEB_SERVER_HOST')"
           >
             <el-input
-              v-model="form.webServerHost"
+              v-model="formOfSetting.webServerHost"
               type="input"
               :placeholder="$T('SETTINGS_TIP_PLACEHOLDER_WEB_HOST')"
-              @change="handleWebServerHostChange"
             />
           </el-form-item>
           <el-form-item
             :label="$T('SETTINGS_SET_WEB_SERVER_PORT')"
           >
             <el-input-number
-              v-model="form.webServerPort"
+              v-model="formOfSetting.webServerPort"
               :min="1"
               :max="65535"
               :placeholder="$T('SETTINGS_TIP_PLACEHOLDER_WEB_PORT')"
@@ -1259,10 +1220,9 @@
             :label="$T('SETTINGS_SET_WEB_SERVER_PATH')"
           >
             <el-input
-              v-model="form.webServerPath"
+              v-model="formOfSetting.webServerPath"
               type="input"
               :placeholder="$T('SETTINGS_SET_WEB_SERVER_PATH')"
-              @change="handleWebServerPathChange"
             />
           </el-form-item>
         </template>
@@ -1296,9 +1256,9 @@
           >
             <el-option
               v-for="typeitem of syncType"
-              :key="typeitem.value"
-              :label="typeitem.label"
-              :value="typeitem.value"
+              :key="typeitem"
+              :label="typeitem.slice(0, 1).toUpperCase() + typeitem.slice(1)"
+              :value="typeitem"
             />
           </el-select>
         </el-form-item>
@@ -1313,39 +1273,14 @@
           />
         </el-form-item>
         <el-form-item
-          :label="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_USERNAME` as any)"
+          v-for="inputItem in ['username', 'repo', 'branch', 'token']"
+          :key="inputItem"
+          :label="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_${inputItem.toUpperCase()}` as any)"
         >
           <el-input
-            v-model.trim="sync.username"
+            v-model.trim="sync[inputItem as any]"
             type="input"
-            :placeholder="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_USERNAME_PLACEHOLDER` as any)"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_REPO` as any)"
-        >
-          <el-input
-            v-model.trim="sync.repo"
-            type="input"
-            :placeholder="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_REPO_PLACEHOLDER` as any)"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_BRANCH` as any)"
-        >
-          <el-input
-            v-model.trim="sync.branch"
-            type="input"
-            :placeholder="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_BRANCH_PLACEHOLDER` as any)"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_TOKEN` as any)"
-        >
-          <el-input
-            v-model.trim="sync.token"
-            type="input"
-            :placeholder="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_TOKEN_PLACEHOLDER` as any)"
+            :placeholder="$T(`SETTINGS_SYNC_CONFIG_${sync.type.toUpperCase()}_${inputItem.toUpperCase()}_PLACEHOLDER` as any)"
           />
         </el-form-item>
         <el-form-item
@@ -1394,28 +1329,14 @@
         >
           <el-button-group>
             <el-button
+              v-for="item in syncTaskList.slice(0, 3)"
+              :key="item.task"
               type="primary"
               plain
               size="small"
-              @click="uploadCommonConfig"
+              @click="syncTaskFn(item.task, item.number)"
             >
-              {{ $T('SETTINGS_SYNC_COMMON_CONFIG') }}
-            </el-button>
-            <el-button
-              type="primary"
-              plain
-              size="small"
-              @click="uploadManageConfig"
-            >
-              {{ $T('SETTINGS_SYNC_MANAGE_CONFIG') }}
-            </el-button>
-            <el-button
-              type="warning"
-              plain
-              size="small"
-              @click="uploadAll"
-            >
-              {{ $T('SETTINGS_SYNC_UPLOAD_ALL') }}
+              {{ item.label }}
             </el-button>
           </el-button-group>
         </el-form-item>
@@ -1424,28 +1345,14 @@
         >
           <el-button-group>
             <el-button
+              v-for="item in syncTaskList.slice(3)"
+              :key="item.task"
               type="primary"
-              size="small"
               plain
-              @click="downloadCommonConfig"
-            >
-              {{ $T('SETTINGS_SYNC_COMMON_CONFIG') }}
-            </el-button>
-            <el-button
-              type="primary"
               size="small"
-              plain
-              @click="downloadManageConfig"
+              @click="syncTaskFn(item.task, item.number)"
             >
-              {{ $T('SETTINGS_SYNC_MANAGE_CONFIG') }}
-            </el-button>
-            <el-button
-              type="warning"
-              size="small"
-              plain
-              @click="downloadAll"
-            >
-              {{ $T('SETTINGS_SYNC_DOWNLOAD_ALL') }}
+              {{ item.label }}
             </el-button>
           </el-button-group>
         </el-form-item>
@@ -1460,319 +1367,37 @@
       align-center
       append-to-body
     >
-      <el-form
-        label-position="top"
-        require-asterisk-position="right"
-        label-width="10vw"
-        size="default"
-        :model="waterMarkForm"
-      >
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISADDWM')"
-        >
-          <el-switch
-            v-model="waterMarkForm.isAddWatermark"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMTYPE')"
-        >
-          <el-radio-group v-model="waterMarkForm.watermarkType">
-            <el-radio label="text">
-              {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_WMTYPE_TEXT') }}
-            </el-radio>
-            <el-radio label="image">
-              {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_WMTYPE_IMAGE') }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISFULLSCREEN_WM')"
-        >
-          <el-switch
-            v-model="waterMarkForm.isFullScreenWatermark"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMDEGREE')"
-        >
-          <el-input-number
-            v-model="waterMarkForm.watermarkDegree"
-            :step="1"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'text'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMTEXT')"
-        >
-          <el-input v-model="waterMarkForm.watermarkText" />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'text'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMTEXT_FONT_PATH')"
-        >
-          <el-input v-model="waterMarkForm.watermarkFontPath" />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMRATIO')"
-        >
-          <el-input-number
-            v-model="waterMarkForm.watermarkScaleRatio"
-            :min="0"
-            :max="1"
-            :step="0.01"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'text'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMCOLOR')"
-        >
-          <el-color-picker
-            v-model="waterMarkForm.watermarkColor"
-            show-alpha
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark && waterMarkForm.watermarkType === 'image'"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMPATH')"
-        >
-          <el-input v-model="waterMarkForm.watermarkImagePath" />
-        </el-form-item>
-        <el-form-item
-          v-show="waterMarkForm.isAddWatermark"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_WMPOSITION')"
-        >
-          <el-radio-group
-            v-model="waterMarkForm.watermarkPosition"
-          >
-            <el-radio
-              v-for="item in waterMarkPositionMap"
-              :key="item[0]"
-              :label="item[0]"
-            >
-              {{ item[1] }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISREMOVEEXIF')"
-        >
-          <el-switch
-            v-model="compressForm.isRemoveExif"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_QUALITY')"
-        >
-          <el-input-number
-            v-model="compressForm.quality"
-            :min="0"
-            :max="100"
-            :step="1"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISCONVERT')"
-        >
-          <el-switch
-            v-model="compressForm.isConvert"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isConvert"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_CONVERTFORMAT')"
-        >
-          <el-select
-            v-model="compressForm.convertFormat"
-            :persistent="false"
-            teleported
-          >
-            <el-option
-              v-for="item in availableFormat"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isConvert"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_CONVERTFORMAT_SPECIFIC')"
-        >
-          <el-input
-            v-model="formatConvertObj"
-            placeholder="{&quot;jpg&quot;: &quot;png&quot;, &quot;png&quot;: &quot;jpg&quot;}"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4}"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISFLIP')"
-        >
-          <el-switch
-            v-model="compressForm.isFlip"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISFLOP')"
-        >
-          <el-switch
-            v-model="compressForm.isFlop"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISRESIZE')"
-        >
-          <el-switch
-            v-model="compressForm.isReSize"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_RESIZEWIDTH')"
-        >
-          <el-input-number
-            v-model="compressForm.reSizeWidth"
-            :min="0"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_RESIZEHEIGHT')"
-        >
-          <el-input-number
-            v-model="compressForm.reSizeHeight"
-            :min="0"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize && compressForm.reSizeHeight > 0 && compressForm.reSizeWidth === 0"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_SKIPRESIZEOfSMALLIMG_HEIGHT')"
-        >
-          <el-switch
-            v-model="compressForm.skipReSizeOfSmallImg"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSize && compressForm.reSizeWidth > 0 && compressForm.reSizeHeight === 0"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_SKIPRESIZEOfSMALLIMG_WIDTH')"
-        >
-          <el-switch
-            v-model="compressForm.skipReSizeOfSmallImg"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISRESIZEBYPERCENT')"
-        >
-          <el-switch
-            v-model="compressForm.isReSizeByPercent"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isReSizeByPercent"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_RESIZEPERCENT')"
-        >
-          <el-input-number
-            v-model="compressForm.reSizePercent"
-            :min="0"
-          />
-        </el-form-item>
-        <el-form-item
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ISROTATE')"
-        >
-          <el-switch
-            v-model="compressForm.isRotate"
-            style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;"
-          />
-        </el-form-item>
-        <el-form-item
-          v-show="compressForm.isRotate"
-          :label="$T('UPLOAD_PAGE_IMAGE_PROCESS_ROTATEDEGREE')"
-        >
-          <el-input-number
-            v-model="compressForm.rotateDegree"
-            :step="1"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button
-            type="primary"
-            @click="handleSaveConfig"
-          >
-            {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_CONFIRM') }}
-          </el-button>
-          <el-button @click="closeDialog">
-            {{ $T('UPLOAD_PAGE_IMAGE_PROCESS_CANCEL') }}
-          </el-button>
-        </el-form-item>
-      </el-form>
+      <ImageProcessSetting
+        v-model="imageProcessDialogVisible"
+      />
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// @ts-ignore
-import { ElForm, ElMessage as $message, ElMessage, ElMessageBox, FormRules } from 'element-plus'
-
-// Element Plus 图标
-import { Reading, Close, Edit, InfoFilled } from '@element-plus/icons-vue'
-
-// 根目录 package.json
-import pkg from 'root/package.json'
-
-// 事件常量
-import { PICGO_OPEN_FILE, PICGO_OPEN_DIRECTORY, OPEN_URL, GET_PICBEDS, HIDE_DOCK } from '#/events/constants'
-import { II18nLanguage, IRPCActionType, ISartMode } from '~/universal/types/enum'
-
-// Electron 相关
-import {
-  ipcRenderer
-} from 'electron'
-
-// 国际化管理器
-import { i18nManager, T as $T } from '@/i18n/index'
-
-// 工具函数
-import { enforceNumber } from '~/universal/utils/common'
-import { getLatestVersion } from '#/utils/getLatestVersion'
 import { compare } from 'compare-versions'
-
-// Vue 相关
-import { computed, onBeforeMount, onBeforeUnmount, reactive, ref, toRaw } from 'vue'
-
-// 数据发送工具函数
-import { getConfig, saveConfig, sendRPC, sendToMain } from '@/utils/dataSender'
-
-// Vue Router 相关
+import { ElForm, ElMessage as $message, ElMessage, ElMessageBox, FormRules } from 'element-plus'
+import { Reading, Close, Edit, InfoFilled } from '@element-plus/icons-vue'
+import { IConfig } from 'piclist'
+import { computed, onBeforeMount, reactive, ref, toRaw, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-// 路由配置常量
+import ImageProcessSetting from '@/components/ImageProcessSetting.vue'
+import { i18nManager, T as $T } from '@/i18n/index'
+import { buildInRenameFormatTable } from '@/manage/utils/common'
 import { SHORTKEY_PAGE } from '@/router/config'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import { osGlobal, picBedGlobal, updatePicBedGlobal } from '@/utils/global'
 
-// Piclist 相关类型声明
-import { IConfig, IBuildInCompressOptions, IBuildInWaterMarkOptions } from 'piclist'
+import { II18nLanguage, IRPCActionType, ISartMode } from '#/types/enum'
+import { enforceNumber } from '#/utils/common'
+import { configPaths, ISartModeValues } from '#/utils/configPaths'
+import { getLatestVersion } from '#/utils/getLatestVersion'
 
-// 数据发送工具函数
-import { invokeToMain } from '@/manage/utils/dataSender'
+import pkg from 'root/package.json'
+import { invokeToMain, sendRPC, triggerRPC } from '@/utils/common'
 
-// 内置重命名格式表
-import { buildInRenameFormatTable } from '../manage/utils/common'
-import { configPaths, ISartModeValues } from '~/universal/utils/configPaths'
-
-const imageProcessDialogVisible = ref(false)
+const $router = useRouter()
 const activeName = ref<'system' | 'syncAndConfigure' | 'upload' | 'advanced' | 'upadte'>('system')
 
 const shortUrlServerList = [{
@@ -1786,32 +1411,17 @@ const shortUrlServerList = [{
 {
   label: 'xyTom/Url-Shorten-Worker',
   value: 'cf_worker'
-}
-]
+}]
 
 const languageList = i18nManager.languageList.map(item => ({
   label: item.label,
   value: item.value
 }))
 
-const startModeList = [
-  {
-    label: $T('SETTINGS_START_MODE_QUIET'),
-    value: ISartMode.QUIET
-  },
-  {
-    label: $T('SETTINGS_START_MODE_MINI'),
-    value: ISartMode.MINI
-  },
-  {
-    label: $T('SETTINGS_START_MODE_NO_TRAY'),
-    value: ISartMode.NO_TRAY
-  },
-  {
-    label: $T('SETTINGS_START_MODE_MAIN'),
-    value: ISartMode.MAIN
-  }
-]
+const startModeList = Object.values(ISartMode).map(item => ({
+  label: $T(`SETTINGS_START_MODE_${item.toUpperCase().replace(/-/g, '_')}` as any),
+  value: item
+}))
 
 const manualPageOpenList = [{
   label: $T('MANUAL_PAGE_OPEN_BY_BUILD_IN'),
@@ -1820,136 +1430,27 @@ const manualPageOpenList = [{
 {
   label: $T('MANUAL_PAGE_OPEN_BY_BROWSER'),
   value: 'browser'
-}
-]
+}]
 
-const picBed = ref<IPicBedType[]>([])
-
-const waterMarkPositionMap = new Map([
-  ['north', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP')],
-  ['northeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_RIGHT')],
-  ['southeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_RIGHT')],
-  ['south', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM')],
-  ['southwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_LEFT')],
-  ['northwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_LEFT')],
-  ['west', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_LEFT')],
-  ['east', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_RIGHT')],
-  ['centre', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_CENTER')]
-])
-
-const imageExtList = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'tiff', 'tif', 'svg', 'ico', 'avif', 'heif', 'heic']
-
-const availableFormat = ['avif', 'dz', 'fits', 'gif', 'heif', 'input', 'jpeg', 'jpg', 'jp2', 'jxl', 'magick', 'openslide', 'pdf', 'png', 'ppm', 'raw', 'svg', 'tiff', 'tif', 'v', 'webp']
-
-const waterMarkForm = reactive<any>({
-  isAddWatermark: false,
-  watermarkType: 'text',
-  isFullScreenWatermark: false,
-  watermarkDegree: 0,
-  watermarkText: '',
-  watermarkFontPath: '',
-  watermarkScaleRatio: 0.15,
-  watermarkColor: '#CCCCCC73',
-  watermarkImagePath: '',
-  watermarkPosition: 'southeast'
-})
-
-const formatConvertObj = ref('{}')
-
-const compressForm = reactive<any>({
-  quality: 100,
-  isConvert: false,
-  convertFormat: 'jpg',
-  isReSize: false,
-  reSizeWidth: 500,
-  reSizeHeight: 500,
-  skipReSizeOfSmallImg: false,
-  isReSizeByPercent: false,
-  reSizePercent: 50,
-  isRotate: false,
-  rotateDegree: 0,
-  isRemoveExif: false,
-  isFlip: false,
-  isFlop: false
-})
-
-function closeDialog () {
-  imageProcessDialogVisible.value = false
-}
-
-function handleSaveConfig () {
-  let iformatConvertObj = {}
-  try {
-    iformatConvertObj = JSON.parse(formatConvertObj.value)
-  } catch (error) {
+const showPicBedList = computed(() => picBedGlobal.value.map(item => {
+  if (item.visible) {
+    return item.name
   }
-  const formatConvertObjEntries = Object.entries(iformatConvertObj)
-  const formatConvertObjEntriesFilter = formatConvertObjEntries.filter((item: any) => {
-    return imageExtList.includes(item[0]) && availableFormat.includes(item[1])
-  })
-  const formatConvertObjFilter = Object.fromEntries(formatConvertObjEntriesFilter)
-  formatConvertObj.value = JSON.stringify(formatConvertObjFilter)
-  compressForm.formatConvertObj = formatConvertObjFilter
-  saveConfig(configPaths.buildIn.compress, toRaw(compressForm))
-  saveConfig(configPaths.buildIn.watermark, toRaw(waterMarkForm))
-  closeDialog()
-}
-
-async function initForm () {
-  const compress = await getConfig<IBuildInCompressOptions>(configPaths.buildIn.compress)
-  const watermark = await getConfig<IBuildInWaterMarkOptions>(configPaths.buildIn.watermark)
-  if (compress) {
-    compressForm.quality = compress.quality ?? 100
-    compressForm.isConvert = compress.isConvert ?? false
-    compressForm.convertFormat = compress.convertFormat ?? 'jpg'
-    compressForm.isReSize = compress.isReSize ?? false
-    compressForm.reSizeWidth = compress.reSizeWidth ?? 500
-    compressForm.reSizeHeight = compress.reSizeHeight ?? 500
-    compressForm.isReSizeByPercent = compress.isReSizeByPercent ?? false
-    compressForm.skipReSizeOfSmallImg = compress.skipReSizeOfSmallImg ?? false
-    compressForm.reSizePercent = compress.reSizePercent ?? 50
-    compressForm.isRotate = compress.isRotate ?? false
-    compressForm.rotateDegree = compress.rotateDegree ?? 0
-    compressForm.isRemoveExif = compress.isRemoveExif ?? false
-    compressForm.isFlip = compress.isFlip ?? false
-    compressForm.isFlop = compress.isFlop ?? false
-    try {
-      if (typeof compress.formatConvertObj === 'object') {
-        formatConvertObj.value = JSON.stringify(compress.formatConvertObj)
-      } else {
-        formatConvertObj.value = compress.formatConvertObj ?? '{}'
-      }
-    } catch (error) {
-      formatConvertObj.value = '{}'
-    }
-  }
-  if (watermark) {
-    waterMarkForm.isAddWatermark = watermark.isAddWatermark ?? false
-    waterMarkForm.watermarkType = watermark.watermarkType ?? 'text'
-    waterMarkForm.isFullScreenWatermark = watermark.isFullScreenWatermark ?? false
-    waterMarkForm.watermarkDegree = watermark.watermarkDegree ?? 0
-    waterMarkForm.watermarkText = watermark.watermarkText ?? ''
-    waterMarkForm.watermarkFontPath = watermark.watermarkFontPath ?? ''
-    waterMarkForm.watermarkScaleRatio = watermark.watermarkScaleRatio ?? 0.15
-    waterMarkForm.watermarkColor = watermark.watermarkColor === undefined || watermark.watermarkColor === '' ? '#CCCCCC73' : watermark.watermarkColor
-    waterMarkForm.watermarkImagePath = watermark.watermarkImagePath ?? ''
-    waterMarkForm.watermarkPosition = watermark.watermarkPosition ?? 'southeast'
-  }
-}
+  return null
+}).filter(item => item) as string[])
 
 const $customLink = ref<InstanceType<typeof ElForm> | null>(null)
 
-const customLinkRule = (rule: any, value: string, callback: (arg0?: Error) => void) => {
+const customLinkRule = (_: any, value: string, callback: (arg0?: Error) => void) => {
   if (!/\$url/.test(value) && !/\$fileName/.test(value) && !/\$extName/.test(value)) {
     return callback(new Error($T('TIPS_MUST_CONTAINS_URL')))
   } else {
     return callback()
   }
 }
-const $router = useRouter()
-const form = reactive<ISettingForm>({
-  updateHelper: true,
-  showPicBedList: [],
+
+const formOfSetting = ref<ISettingForm>({
+  showUpdateTip: true,
   autoStart: false,
   rename: false,
   autoRename: false,
@@ -1959,7 +1460,7 @@ const form = reactive<ISettingForm>({
   autoCloseMiniWindow: false,
   autoCloseMainWindow: false,
   logLevel: ['all'],
-  autoCopyUrl: true,
+  autoCopy: true,
   useBuiltinClipboard: true,
   logFileSizeLimit: 10,
   deleteCloudFile: false,
@@ -1978,12 +1479,38 @@ const form = reactive<ISettingForm>({
   cfWorkerHost: '',
   deleteLocalFile: false,
   serverKey: '',
-  aesPassword: '',
+  aesPassword: 'PicList-aesPassword',
   enableWebServer: false,
   webServerHost: '0.0.0.0',
   webServerPort: 37777,
-  webServerPath: ''
+  webServerPath: '',
+  registry: '',
+  proxy: '',
+  mainWindowWidth: 1200,
+  mainWindowHeight: 800
 })
+
+const proxy = ref('')
+const formKeys = Object.keys(formOfSetting.value)
+const autoWatchKeys = ['showUpdateTip', 'autoImport', 'autoImportPicBed', 'useBuiltinClipboard', 'isAutoListenClipboard', 'deleteCloudFile', 'deleteLocalFile', 'rename', 'autoRename', 'enableWebServer', 'webServerHost', 'webServerPath', 'serverKey', 'uploadNotification', 'uploadResultNotification', 'autoCloseMainWindow', 'autoCloseMiniWindow', 'isCustomMiniIcon', 'c1nToken', 'yourlsDomain', 'yourlsSignature', 'cfWorkerHost', 'registry', 'proxy', 'autoCopy', 'encodeOutputURL', 'useShortUrl']
+
+const addWatch = () => {
+  autoWatchKeys.forEach(key => {
+    watch(() => formOfSetting.value[key as keyof ISettingForm], value => {
+      saveConfig({
+        [`settings.${key}`]: value
+      })
+    })
+  })
+}
+
+const addProxyWatch = () => {
+  watch(proxy, (value) => {
+    saveConfig({
+      'picBed.proxy': value
+    })
+  })
+}
 
 const valueToOptionItem = (value: any, list: { label: string, value: any }[]) => {
   return list.find(item => item.value === value) || list[0]
@@ -2004,18 +1531,14 @@ const upDownConfigVisible = ref(false)
 const proxyVisible = ref(false)
 const mainWindowSizeVisible = ref(false)
 const advancedRenameVisible = ref(false)
+const imageProcessDialogVisible = ref(false)
+
+const rawPicGoSize = ref(false)
 
 const customLink = reactive({
   value: '![$fileName]($url)'
 })
 
-const mainWindowWidth = ref(1200)
-const mainWindowHeight = ref(800)
-const rawPicGoSize = ref(false)
-
-const proxy = ref('')
-const npmRegistry = ref('')
-const npmProxy = ref('')
 const rules = reactive<FormRules>({
   value: [
     { validator: customLinkRule, trigger: 'blur' }
@@ -2042,7 +1565,7 @@ const advancedRename = ref({
   format: '{filename}'
 })
 
-const sync = ref({
+const sync = ref<any>({
   type: 'github',
   username: '',
   repo: '',
@@ -2053,20 +1576,7 @@ const sync = ref({
   interval: 60
 })
 
-const syncType = [
-  {
-    label: 'GitHub',
-    value: 'github'
-  },
-  {
-    label: 'Gitee',
-    value: 'gitee'
-  },
-  {
-    label: 'Gitea',
-    value: 'gitea'
-  }
-]
+const syncType = ['github', 'gitee', 'gitea']
 
 async function cancelSyncSetting () {
   syncVisible.value = false
@@ -2091,99 +1601,61 @@ function confirmSyncSetting () {
 
 const version = pkg.version
 const latestVersion = ref('')
-const os = ref('')
 
 const needUpdate = computed(() => {
   if (latestVersion.value) {
     return compareVersion2Update(version, latestVersion.value)
-  } else {
-    return false
   }
+  return false
 })
 
 onBeforeMount(() => {
-  os.value = process.platform
-  sendToMain(GET_PICBEDS)
-  ipcRenderer.on(GET_PICBEDS, getPicBeds)
   initData()
-  initForm()
 })
 
 async function initData () {
-  const config = (await getConfig<IConfig>())!
-  if (config !== undefined) {
-    const settings = config.settings || {}
-    const picBed = config.picBed
-    form.updateHelper = settings.showUpdateTip ?? true
-    form.autoStart = settings.autoStart || false
-    form.rename = settings.rename || false
-    form.autoRename = settings.autoRename || false
-    form.uploadNotification = settings.uploadNotification || false
-    form.uploadResultNotification = settings.uploadResultNotification ?? true
-    form.miniWindowOntop = settings.miniWindowOntop || false
-    form.autoCloseMiniWindow = settings.autoCloseMiniWindow || false
-    form.autoCloseMainWindow = settings.autoCloseMainWindow || false
-    form.logLevel = initArray(settings.logLevel || [], ['all'])
-    form.autoCopyUrl = settings.autoCopy ?? true
-    form.useBuiltinClipboard = settings.useBuiltinClipboard ?? true
-    form.isAutoListenClipboard = settings.isAutoListenClipboard || false
-    form.encodeOutputURL = settings.encodeOutputURL || false
-    form.deleteCloudFile = settings.deleteCloudFile || false
-    form.autoImport = settings.autoImport || false
-    form.autoImportPicBed = initArray(settings.autoImportPicBed || [], [])
-    form.isCustomMiniIcon = settings.isCustomMiniIcon || false
-    form.customMiniIcon = settings.customMiniIcon || ''
-    form.isHideDock = settings.isHideDock || false
-    form.useShortUrl = settings.useShortUrl || false
-    form.shortUrlServer = settings.shortUrlServer || 'c1n'
-    form.c1nToken = settings.c1nToken || ''
-    form.yourlsDomain = settings.yourlsDomain || ''
-    form.yourlsSignature = settings.yourlsSignature || ''
-    form.cfWorkerHost = settings.cfWorkerHost || ''
-    form.deleteLocalFile = settings.deleteLocalFile || false
-    form.serverKey = settings.serverKey || ''
-    form.aesPassword = settings.aesPassword || 'PicList-aesPassword'
-    form.enableWebServer = settings.enableWebServer || false
-    form.webServerHost = settings.webServerHost || '0.0.0.0'
-    form.webServerPort = settings.webServerPort || 37777
-    form.webServerPath = settings.webServerPath || ''
-    currentLanguage.value = valueToOptionItem(settings.language || 'zh-CN', languageList)
-    currentStartMode.value = valueToOptionItem(settings.startMode || ISartMode.QUIET, startModeList)
-    currentManualPageOpen.value = valueToOptionItem(settings.manualPageOpen || 'window', manualPageOpenList)
-    currentShortUrlServer.value = valueToOptionItem(settings.shortUrlServer || 'c1n', shortUrlServerList)
-    customLink.value = settings.customLink || '![$fileName]($url)'
-    proxy.value = picBed.proxy || ''
-    npmRegistry.value = settings.registry || ''
-    npmProxy.value = settings.proxy || ''
-    mainWindowWidth.value = settings.mainWindowWidth || 1200
-    mainWindowHeight.value = settings.mainWindowHeight || 800
-    server.value = settings.server || {
-      port: 36677,
-      host: '0.0.0.0',
-      enable: true
-    }
-    advancedRename.value = config.buildIn?.rename || {
-      enable: false,
-      format: '{filename}'
-    }
-    if (advancedRename.value.enable) {
-      form.autoRename = false
-      saveConfig({
-        [configPaths.settings.autoRename]: false
-      })
-    }
-    sync.value = settings.sync || {
-      type: 'github',
-      username: '',
-      repo: '',
-      branch: '',
-      token: '',
-      endpoint: '',
-      proxy: '',
-      interval: 60
-    }
-    form.logFileSizeLimit = enforceNumber(settings.logFileSizeLimit) || 10
+  const config = (await getConfig<IConfig>()) || {} as IConfig
+  const settings = config.settings || {}
+  const picBed = config.picBed
+  formKeys.forEach(key => {
+    (formOfSetting.value as any)[key as keyof ISettingForm] = settings[key] ?? formOfSetting.value[key as keyof ISettingForm]
+  })
+  formOfSetting.value.logLevel = initArray(settings.logLevel || [], ['all'])
+  formOfSetting.value.autoImportPicBed = initArray(settings.autoImportPicBed || [], [])
+  currentLanguage.value = valueToOptionItem(settings.language || 'zh-CN', languageList)
+  currentStartMode.value = valueToOptionItem(settings.startMode || ISartMode.QUIET, startModeList)
+  currentManualPageOpen.value = valueToOptionItem(settings.manualPageOpen || 'window', manualPageOpenList)
+  currentShortUrlServer.value = valueToOptionItem(settings.shortUrlServer || 'c1n', shortUrlServerList)
+  customLink.value = settings.customLink || '![$fileName]($url)'
+  proxy.value = picBed.proxy || ''
+  server.value = settings.server || {
+    port: 36677,
+    host: '0.0.0.0',
+    enable: true
   }
+  advancedRename.value = config.buildIn?.rename || {
+    enable: false,
+    format: '{filename}'
+  }
+  if (advancedRename.value.enable) {
+    formOfSetting.value.autoRename = false
+    saveConfig({
+      [configPaths.settings.autoRename]: false
+    })
+  }
+  sync.value = settings.sync || {
+    type: 'github',
+    username: '',
+    repo: '',
+    branch: '',
+    token: '',
+    endpoint: '',
+    proxy: '',
+    interval: 60
+  }
+  formOfSetting.value.logFileSizeLimit = enforceNumber(settings.logFileSizeLimit) || 10
+  addProxyWatch()
+  addWatch()
 }
 
 function initArray (arrayT: string | string[], defaultValue: string[]) {
@@ -2197,22 +1669,18 @@ function initArray (arrayT: string | string[], defaultValue: string[]) {
   return arrayT
 }
 
-function getPicBeds (event: Event, picBeds: IPicBedType[]) {
-  picBed.value = picBeds
-  form.showPicBedList = picBed.value.map(item => {
-    if (item.visible) {
-      return item.name
-    }
-    return null
-  }).filter(item => item) as string[]
+function openFile (file: string) {
+  sendRPC(IRPCActionType.PICLIST_OPEN_FILE, file)
 }
 
-function openFile (file: string) {
-  sendToMain(PICGO_OPEN_FILE, file)
+function handleManualPageOpenChange (val: string) {
+  saveConfig({
+    [configPaths.settings.manualPageOpen]: val
+  })
 }
 
 function openDirectory (directory?: string, inStorePath = true) {
-  sendToMain(PICGO_OPEN_DIRECTORY, directory, inStorePath)
+  sendRPC(IRPCActionType.PICLIST_OPEN_DIRECTORY, directory, inStorePath)
 }
 
 function openLogSetting () {
@@ -2229,21 +1697,8 @@ function confirmCustomLink () {
     if (valid) {
       saveConfig(configPaths.settings.customLink, customLink.value)
       customLinkVisible.value = false
-      sendToMain('updateCustomLink')
-    } else {
-      return false
     }
   })
-}
-
-function handleEncodeOutputURL (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.encodeOutputURL, val)
-  const successNotification = new Notification($T('SETTINGS_ENCODE_OUTPUT_URL'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
 }
 
 async function handleCancelAdvancedRename () {
@@ -2257,87 +1712,45 @@ async function handleCancelAdvancedRename () {
 function handleSaveAdvancedRename () {
   saveConfig(configPaths.buildIn.rename, toRaw(advancedRename.value))
   if (advancedRename.value.enable) {
-    form.autoRename = false
+    formOfSetting.value.autoRename = false
     saveConfig(configPaths.settings.autoRename, false)
   }
   advancedRenameVisible.value = false
-  const successNotification = new Notification($T('SETTINGS_ADVANCED_RENAME'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
-}
-
-async function cancelProxy () {
-  proxyVisible.value = false
-  proxy.value = await getConfig<string>(configPaths.picBed.proxy) || ''
-}
-
-function confirmProxy () {
-  proxyVisible.value = false
-  saveConfig({
-    [configPaths.picBed.proxy]: proxy.value,
-    [configPaths.settings.proxy]: npmProxy.value,
-    [configPaths.settings.registry]: npmRegistry.value
-  })
-  const successNotification = new Notification($T('SETTINGS_SET_PROXY_AND_MIRROR'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
 }
 
 function handleMigrateFromPicGo () {
-  ElMessageBox.confirm($T('SETTINGS_MIGRATE_FROM_PICGO_CONTENT'), $T('SETTINGS_MIGRATE_FROM_PICGO_TITLE'), {
-    confirmButtonText: $T('CONFIRM'),
-    cancelButtonText: $T('CANCEL'),
-    type: 'warning',
-    center: true
-  }).then(() => {
-    ipcRenderer.invoke('migrateFromPicGo').then(() => {
-      ElMessage.success($T('SETTINGS_MIGRATE_FROM_PICGO_SUCCESS'))
-    }).catch(() => {
-      ElMessage.error($T('SETTINGS_MIGRATE_FROM_PICGO_FAILED'))
-    })
+  ElMessageBox.confirm(
+    $T('SETTINGS_MIGRATE_FROM_PICGO_CONTENT'),
+    $T('SETTINGS_MIGRATE_FROM_PICGO_TITLE'), {
+      confirmButtonText: $T('CONFIRM'),
+      cancelButtonText: $T('CANCEL'),
+      type: 'warning',
+      center: true
+    }).then(() => {
+    triggerRPC<boolean>(IRPCActionType.CONFIGURE_MIGRATE_FROM_PICGO)
+      .then(() => {
+        ElMessage.success($T('SETTINGS_MIGRATE_FROM_PICGO_SUCCESS'))
+      })
+      .catch(() => {
+        ElMessage.error($T('SETTINGS_MIGRATE_FROM_PICGO_FAILED'))
+      })
   }).catch(() => {
     return false
   })
 }
 
-function updateHelperChange (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.showUpdateTip, val)
-}
-
-function autoImportChange (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.autoImport, val)
-}
-
-function handleAutoImportPicBedChange (val: string[]) {
-  saveConfig(configPaths.settings.autoImportPicBed, val)
-}
-
 function handleHideDockChange (val: ICheckBoxValueType) {
   if (val && currentStartMode.value.value === ISartMode.NO_TRAY) {
     ElMessage.warning($T('SETTINGS_ISHIDEDOCK_TIPS'))
-    form.isHideDock = false
+    formOfSetting.value.isHideDock = false
     return
   }
   saveConfig(configPaths.settings.isHideDock, val)
-  sendToMain(HIDE_DOCK, val)
-}
-
-function useBuiltinClipboardChange (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.useBuiltinClipboard, val)
-}
-
-function handleIsAutoListenClipboard (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.isAutoListenClipboard, val)
+  sendRPC(IRPCActionType.HIDE_DOCK, val)
 }
 
 function handleShowPicBedListChange (val: ICheckBoxValueType[]) {
-  const list = picBed.value.map(item => {
+  const list = picBedGlobal.value.map(item => {
     if (!val.includes(item.name)) {
       item.visible = false
     } else {
@@ -2348,36 +1761,12 @@ function handleShowPicBedListChange (val: ICheckBoxValueType[]) {
   saveConfig({
     [configPaths.picBed.list]: list
   })
-  sendToMain(GET_PICBEDS)
+  updatePicBedGlobal()
 }
 
 function handleAutoStartChange (val: ICheckBoxValueType) {
   saveConfig(configPaths.settings.autoStart, val)
-  sendToMain('autoStart', val)
-}
-
-function handleDeleteCloudFile (val: ICheckBoxValueType) {
-  saveConfig({
-    [configPaths.settings.deleteCloudFile]: val
-  })
-}
-
-function handleDeleteLocalFile (val: ICheckBoxValueType) {
-  saveConfig({
-    [configPaths.settings.deleteLocalFile]: val
-  })
-}
-
-function handleRename (val: ICheckBoxValueType) {
-  saveConfig({
-    [configPaths.settings.rename]: val
-  })
-}
-
-function handleAutoRename (val: ICheckBoxValueType) {
-  saveConfig({
-    [configPaths.settings.autoRename]: val
-  })
+  sendRPC(IRPCActionType.PICLIST_AUTO_START, val)
 }
 
 function compareVersion2Update (current: string, latest: string): boolean {
@@ -2386,12 +1775,7 @@ function compareVersion2Update (current: string, latest: string): boolean {
 
 async function checkUpdate () {
   checkUpdateVisible.value = true
-  const version = await getLatestVersion()
-  if (version) {
-    latestVersion.value = version
-  } else {
-    latestVersion.value = $T('TIPS_NETWORK_ERROR')
-  }
+  latestVersion.value = await getLatestVersion() || $T('TIPS_NETWORK_ERROR')
 }
 
 function confirmCheckVersion () {
@@ -2405,134 +1789,56 @@ function cancelCheckVersion () {
   checkUpdateVisible.value = false
 }
 
-function handleEnableWebServerChange (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.enableWebServer, val)
-}
-
-function handleWebServerHostChange (val: string) {
-  saveConfig(configPaths.settings.webServerHost, val)
-}
-
-function handleWebServerPortChange (val?: number, oldVal?: number) {
+function handleWebServerPortChange (val?: number, _?: number) {
   saveConfig(configPaths.settings.webServerPort, Number(val) || 37777)
 }
 
-function handleWebServerPathChange (val: string) {
-  saveConfig(configPaths.settings.webServerPath, val)
-}
-
 function confirmWebServerSetting () {
-  if (form.enableWebServer) {
-    sendToMain('restartWebServer')
+  if (formOfSetting.value.enableWebServer) {
+    sendRPC(IRPCActionType.ADVANCED_RESTART_WEB_SERVER)
   } else {
-    sendToMain('stopWebServer')
+    sendRPC(IRPCActionType.ADVANCED_STOP_WEB_SERVER)
   }
 }
 
-function handleServerKeyChange (val: string) {
-  saveConfig(configPaths.settings.serverKey, val)
-}
-
-function handleUploadNotification (val: ICheckBoxValueType) {
-  saveConfig({
-    [configPaths.settings.uploadNotification]: val
-  })
-}
-
-function handleUploadResultNotification (val: ICheckBoxValueType) {
-  saveConfig({
-    [configPaths.settings.uploadResultNotification]: val
-  })
+async function getMainWindowSize () {
+  formOfSetting.value.mainWindowWidth = await getConfig<number>(configPaths.settings.mainWindowWidth) || 1200
+  formOfSetting.value.mainWindowHeight = await getConfig<number>(configPaths.settings.mainWindowHeight) || 800
 }
 
 async function cancelWindowSize () {
   mainWindowSizeVisible.value = false
-  mainWindowWidth.value = await getConfig<number>(configPaths.settings.mainWindowWidth) || 1200
-  mainWindowHeight.value = await getConfig<number>(configPaths.settings.mainWindowHeight) || 800
+  await getMainWindowSize()
 }
 
 async function confirmWindowSize () {
   mainWindowSizeVisible.value = false
-  const width = enforceNumber(mainWindowWidth.value)
-  const height = enforceNumber(mainWindowHeight.value)
+  const width = enforceNumber(formOfSetting.value.mainWindowWidth)
+  const height = enforceNumber(formOfSetting.value.mainWindowHeight)
   saveConfig({
     [configPaths.settings.mainWindowWidth]: rawPicGoSize.value ? 800 : width < 100 ? 100 : width,
     [configPaths.settings.mainWindowHeight]: rawPicGoSize.value ? 450 : height < 100 ? 100 : height
   })
-
-  const successNotification = new Notification($T('SETTINGS_MAIN_WINDOW_SIZE'), {
-    body: $T('TIPS_NEED_RELOAD')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
-}
-
-function handleAutoCloseMainWindowChange (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.autoCloseMainWindow, val)
-}
-
-function handleAutoCloseMiniWindowChange (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.autoCloseMiniWindow, val)
+  await getMainWindowSize()
 }
 
 function handleMiniWindowOntop (val: ICheckBoxValueType) {
   saveConfig(configPaths.settings.miniWindowOntop, val)
-  ipcRenderer.send('miniWindowOntop', val)
+  sendRPC(IRPCActionType.MINI_WINDOW_ON_TOP, val)
 }
 
 async function handleMiniIconPath (_: Event) {
   const result = await invokeToMain('openFileSelectDialog')
   if (result && result[0]) {
-    form.customMiniIcon = result[0]
-    saveConfig(configPaths.settings.customMiniIcon, form.customMiniIcon)
-    ipcRenderer.send('updateMiniIcon', form.customMiniIcon)
-  }
-}
-
-function handleIsCustomMiniIcon (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.isCustomMiniIcon, val)
-}
-
-function handleAutoCopyUrl (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.autoCopy, val)
-  const successNotification = new Notification($T('SETTINGS_AUTO_COPY_URL_AFTER_UPLOAD'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
-}
-
-function handleUseShortUrl (val: ICheckBoxValueType) {
-  saveConfig(configPaths.settings.useShortUrl, val)
-  const successNotification = new Notification($T('SETTINGS_SHORT_URL'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
+    formOfSetting.value.customMiniIcon = result[0]
+    saveConfig(configPaths.settings.customMiniIcon, formOfSetting.value.customMiniIcon)
+    sendRPC(IRPCActionType.UPDATE_MINI_WINDOW_ICON, formOfSetting.value.customMiniIcon)
   }
 }
 
 function handleShortUrlServerChange (val: string) {
-  form.shortUrlServer = val
+  formOfSetting.value.shortUrlServer = val
   saveConfig(configPaths.settings.shortUrlServer, val)
-}
-
-function handleC1nTokenChange (val: string) {
-  saveConfig(configPaths.settings.c1nToken, val)
-}
-
-function handleYourlsDomainChange (val: string) {
-  saveConfig(configPaths.settings.yourlsDomain, val)
-}
-
-function handleYourlsSignatureChange (val: string) {
-  saveConfig(configPaths.settings.yourlsSignature, val)
-}
-
-function handleCfWorkerHostChange (val: string) {
-  saveConfig(configPaths.settings.cfWorkerHost, val)
 }
 
 function handleAesPasswordChange (val: string) {
@@ -2540,19 +1846,13 @@ function handleAesPasswordChange (val: string) {
 }
 
 function confirmLogLevelSetting () {
-  if (form.logLevel.length === 0) {
+  if (formOfSetting.value.logLevel.length === 0) {
     return $message.error($T('TIPS_PLEASE_CHOOSE_LOG_LEVEL'))
   }
   saveConfig({
-    [configPaths.settings.logLevel]: form.logLevel,
-    [configPaths.settings.logFileSizeLimit]: form.logFileSizeLimit
+    [configPaths.settings.logLevel]: formOfSetting.value.logLevel,
+    [configPaths.settings.logFileSizeLimit]: formOfSetting.value.logFileSizeLimit
   })
-  const successNotification = new Notification($T('SETTINGS_SET_LOG_FILE'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
   logFileVisible.value = false
 }
 
@@ -2567,68 +1867,54 @@ async function cancelLogLevelSetting () {
       logLevel = ['all']
     }
   }
-  form.logLevel = logLevel
-  form.logFileSizeLimit = logFileSizeLimit
+  formOfSetting.value.logLevel = logLevel
+  formOfSetting.value.logFileSizeLimit = logFileSizeLimit
 }
 
-function DownMessage (failed: number) {
+function syncMessage (failed: number, taskType: 'UPLOAD' | 'DOWNLOAD') {
   if (failed) {
-    $message.error($T('SETTINGS_SYNC_DOWNLOAD_FAILED', { failed }))
+    $message.error($T(`SETTINGS_SYNC_${taskType}_FAILED`, { failed }))
   } else {
-    $message.success($T('SETTINGS_SYNC_DOWNLOAD_SUCCESS'))
+    $message.success($T(`SETTINGS_SYNC_${taskType}_SUCCESS`))
   }
 }
 
-function upMessage (failed: number) {
-  if (failed) {
-    $message.error($T('SETTINGS_SYNC_UPLOAD_FAILED', { failed }))
-  } else {
-    $message.success($T('SETTINGS_SYNC_UPLOAD_SUCCESS'))
+const syncTaskList = [
+  {
+    task: IRPCActionType.CONFIGURE_UPLOAD_COMMON_CONFIG,
+    label: $T('SETTINGS_SYNC_COMMON_CONFIG'),
+    number: 2
+  },
+  {
+    task: IRPCActionType.CONFIGURE_UPLOAD_MANAGE_CONFIG,
+    label: $T('SETTINGS_SYNC_MANAGE_CONFIG'),
+    number: 2
+  },
+  {
+    task: IRPCActionType.CONFIGURE_UPLOAD_ALL_CONFIG,
+    label: $T('SETTINGS_SYNC_UPLOAD_ALL'),
+    number: 4
+  },
+  {
+    task: IRPCActionType.CONFIGURE_DOWNLOAD_COMMON_CONFIG,
+    label: $T('SETTINGS_SYNC_COMMON_CONFIG'),
+    number: 2
+  },
+  {
+    task: IRPCActionType.CONFIGURE_DOWNLOAD_MANAGE_CONFIG,
+    label: $T('SETTINGS_SYNC_MANAGE_CONFIG'),
+    number: 2
+  },
+  {
+    task: IRPCActionType.CONFIGURE_DOWNLOAD_ALL_CONFIG,
+    label: $T('SETTINGS_SYNC_DOWNLOAD_ALL'),
+    number: 4
   }
-}
+]
 
-async function uploadCommonConfig () {
-  const result = await invokeToMain('uploadCommonConfig')
-  const failed = 2 - result
-  upMessage(failed)
-}
-
-async function downloadCommonConfig () {
-  const result = await invokeToMain('downloadCommonConfig')
-  const failed = 2 - result
-  DownMessage(failed)
-}
-
-async function uploadManageConfig () {
-  const result = await invokeToMain('uploadManageConfig')
-  const failed = 2 - result
-  upMessage(failed)
-}
-
-async function downloadManageConfig () {
-  const result = await invokeToMain('downloadManageConfig')
-  const failed = 2 - result
-  DownMessage(failed)
-}
-
-async function uploadAll () {
-  const result = await invokeToMain('uploadAllConfig')
-  const failed = 4 - result
-  if (result === 4) {
-    $message.success($T('SETTINGS_SYNC_UPLOAD_SUCCESS'))
-  } else {
-    $message.error($T('SETTINGS_SYNC_UPLOAD_FAILED') + `(${failed})`)
-  }
-}
-
-async function downloadAll () {
-  const result = await invokeToMain('downloadAllConfig')
-  const failed = 4 - result
-  if (result === 4) {
-    $message.success($T('SETTINGS_SYNC_DOWNLOAD_SUCCESS'))
-  } else {
-    $message.error($T('SETTINGS_SYNC_DOWNLOAD_FAILED') + `(${failed})`)
-  }
+async function syncTaskFn (task: IRPCActionType, number: number) {
+  const failed = number - (await triggerRPC<number>(task) || 0)
+  syncMessage(failed, task.includes('UPLOAD') ? 'UPLOAD' : 'DOWNLOAD')
 }
 
 function confirmServerSetting () {
@@ -2636,14 +1922,8 @@ function confirmServerSetting () {
   saveConfig({
     [configPaths.settings.server]: server.value
   })
-  const successNotification = new Notification($T('SETTINGS_SET_PICGO_SERVER'), {
-    body: $T('TIPS_SET_SUCCEED')
-  })
-  successNotification.onclick = () => {
-    return true
-  }
   serverVisible.value = false
-  sendToMain('updateServer')
+  sendRPC(IRPCActionType.ADVANCED_UPDATE_SERVER)
 }
 
 async function cancelServerSetting () {
@@ -2658,7 +1938,7 @@ async function cancelServerSetting () {
 function handleLevelDisabled (val: string) {
   const currentLevel = val
   let flagLevel
-  const result = form.logLevel.some(item => {
+  const result = formOfSetting.value.logLevel.some((item: string) => {
     if (item === 'all' || item === 'none') {
       flagLevel = item
     }
@@ -2668,7 +1948,7 @@ function handleLevelDisabled (val: string) {
     if (currentLevel !== flagLevel) {
       return true
     }
-  } else if (form.logLevel.length > 0) {
+  } else if (formOfSetting.value.logLevel.length > 0) {
     if (val === 'all' || val === 'none') {
       return true
     }
@@ -2681,12 +1961,12 @@ function handleLanguageChange (val: string) {
   saveConfig({
     [configPaths.settings.language]: val
   })
-  sendToMain(GET_PICBEDS)
+  updatePicBedGlobal()
 }
 
 function handleStartModeChange (val: ISartModeValues) {
   if (val === ISartMode.NO_TRAY) {
-    if (form.isHideDock) {
+    if (formOfSetting.value.isHideDock) {
       ElMessage.warning($T('SETTINGS_ISHIDEDOCK_TIPS'))
       currentStartMode.value = valueToOptionItem(ISartMode.QUIET, startModeList)
       return
@@ -2698,16 +1978,12 @@ function handleStartModeChange (val: ISartModeValues) {
   })
 }
 
-function handleManualPageOpenChange (val: string) {
-  saveConfig({
-    [configPaths.settings.manualPageOpen]: val
-  })
-}
-
 async function goConfigPage () {
   const lang = await getConfig(configPaths.settings.language) || II18nLanguage.ZH_CN
-  const url = lang === II18nLanguage.ZH_CN ? 'https://piclist.cn/configure.html' : 'https://piclist.cn/en/configure.html'
-  sendToMain(OPEN_URL, url)
+  const url = lang === II18nLanguage.ZH_CN
+    ? 'https://piclist.cn/configure.html'
+    : 'https://piclist.cn/en/configure.html'
+  sendRPC(IRPCActionType.OPEN_URL, url)
 }
 
 function goShortCutPage () {
@@ -2715,10 +1991,6 @@ function goShortCutPage () {
     name: SHORTKEY_PAGE
   })
 }
-
-onBeforeUnmount(() => {
-  ipcRenderer.removeListener(GET_PICBEDS, getPicBeds)
-})
 
 </script>
 <script lang="ts">

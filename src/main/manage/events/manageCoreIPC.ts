@@ -1,27 +1,28 @@
 import {
   IpcMainEvent,
+  IpcMainInvokeEvent,
   ipcMain
 } from 'electron'
-import getManageApi from '../Main'
-import { PICLIST_MANAGE_GET_CONFIG, PICLIST_MANAGE_SAVE_CONFIG, PICLIST_MANAGE_REMOVE_CONFIG } from './constants'
+
+import getManageApi from '~/manage/Main'
+import { PICLIST_MANAGE_GET_CONFIG, PICLIST_MANAGE_SAVE_CONFIG, PICLIST_MANAGE_REMOVE_CONFIG } from '~/manage/events/constants'
 
 const manageApi = getManageApi()
 
 const handleManageGetConfig = () => {
-  ipcMain.on(PICLIST_MANAGE_GET_CONFIG, (event: IpcMainEvent, key: string | undefined, callbackId: string) => {
-    const result = manageApi.getConfig(key)
-    event.sender.send(PICLIST_MANAGE_GET_CONFIG, result, callbackId)
+  ipcMain.handle(PICLIST_MANAGE_GET_CONFIG, (_: IpcMainInvokeEvent, key: string | undefined) => {
+    return manageApi.getConfig(key)
   })
 }
 
 const handleManageSaveConfig = () => {
-  ipcMain.on(PICLIST_MANAGE_SAVE_CONFIG, (_event: IpcMainEvent, data: any) => {
+  ipcMain.on(PICLIST_MANAGE_SAVE_CONFIG, (_: IpcMainEvent, data: any) => {
     manageApi.saveConfig(data)
   })
 }
 
 const handleManageRemoveConfig = () => {
-  ipcMain.on(PICLIST_MANAGE_REMOVE_CONFIG, (_event: IpcMainEvent, key: string, propName: string) => {
+  ipcMain.on(PICLIST_MANAGE_REMOVE_CONFIG, (_: IpcMainEvent, key: string, propName: string) => {
     manageApi.removeConfig(key, propName)
   })
 }

@@ -91,34 +91,21 @@
     </el-row>
   </div>
 </template>
+
 <script lang="ts" setup>
-// Element Plus 图标
-import { Edit, Delete, Plus } from '@element-plus/icons-vue'
-
-// 数据发送工具函数
-import { saveConfig, triggerRPC } from '@/utils/dataSender'
-
-// 时间处理库
 import dayjs from 'dayjs'
-
-// 枚举类型声明
-import { IRPCActionType } from '~/universal/types/enum'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// Vue Router 相关
-import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
-
-// Vue 生命周期钩子
+import { Edit, Delete, Plus } from '@element-plus/icons-vue'
 import { onBeforeMount, ref } from 'vue'
+import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router'
+import { saveConfig } from '@/utils/dataSender'
 
-// 路由配置常量
+import { T as $T } from '@/i18n/index'
+import { useStore } from '@/hooks/useStore'
 import { PICBEDS_PAGE, UPLOADER_CONFIG_PAGE } from '@/router/config'
 
-// 状态管理
-import { useStore } from '@/hooks/useStore'
-import { configPaths } from '~/universal/utils/configPaths'
+import { IRPCActionType } from '#/types/enum'
+import { configPaths } from '#/utils/configPaths'
+import { sendRPC, triggerRPC } from '@/utils/common'
 
 const $router = useRouter()
 const $route = useRoute()
@@ -129,11 +116,14 @@ const defaultConfigId = ref('')
 const store = useStore()
 
 async function selectItem (id: string) {
-  await triggerRPC<void>(IRPCActionType.SELECT_UPLOADER, type.value, id)
+  await triggerRPC<void>(IRPCActionType.UPLOADER_SELECT, type.value, id)
+  if (store?.state.defaultPicBed === type.value) {
+    sendRPC(IRPCActionType.TRAY_SET_TOOL_TIP, `${type.value} ${curConfigList.value.find(item => item._id === id)?._configName || ''}`)
+  }
   defaultConfigId.value = id
 }
 
-onBeforeRouteUpdate((to, from, next) => {
+onBeforeRouteUpdate((to, _, next) => {
   if (to.params.type && (to.name === UPLOADER_CONFIG_PAGE)) {
     type.value = to.params.type as string
     getCurrentConfigList()
@@ -147,7 +137,7 @@ onBeforeMount(() => {
 })
 
 async function getCurrentConfigList () {
-  const configList = await triggerRPC<IUploaderConfigItem>(IRPCActionType.GET_PICBED_CONFIG_LIST, type.value)
+  const configList = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_GET_CONFIG_LIST, type.value)
   curConfigList.value = configList?.configList ?? []
   defaultConfigId.value = configList?.defaultId ?? ''
 }
@@ -170,7 +160,7 @@ function formatTime (time: number): string {
 }
 
 async function deleteConfig (id: string) {
-  const res = await triggerRPC<IUploaderConfigItem | undefined>(IRPCActionType.DELETE_PICBED_CONFIG, type.value, id)
+  const res = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_DELETE_CONFIG, type.value, id)
   if (!res) return
   curConfigList.value = res.configList
   defaultConfigId.value = res.defaultId
@@ -193,6 +183,8 @@ function setDefaultPicBed (type: string) {
   })
 
   store?.setDefaultPicBed(type)
+  const currentConfigName = curConfigList.value.find(item => item._id === defaultConfigId.value)?._configName
+  sendRPC(IRPCActionType.TRAY_SET_TOOL_TIP, `${type} ${currentConfigName || ''}`)
   const successNotification = new Notification($T('SETTINGS_DEFAULT_PICBED'), {
     body: $T('TIPS_SET_SUCCEED')
   })

@@ -76,11 +76,13 @@
     </el-form>
   </div>
 </template>
+
 <script lang="ts" setup>
-import { reactive, ref, watch } from 'vue'
-import { cloneDeep, union } from 'lodash'
-import { getConfig } from '@/utils/dataSender'
 import type { FormInstance } from 'element-plus'
+import { cloneDeep, union } from 'lodash'
+import { reactive, ref, watch } from 'vue'
+
+import { getConfig } from '@/utils/dataSender'
 import { T as $T } from '@/i18n'
 
 interface IProps {
@@ -114,7 +116,6 @@ async function validate (): Promise<IStringKeyMap | false> {
         resolve(ruleForm)
       } else {
         resolve(false)
-        return false
       }
     })
   })

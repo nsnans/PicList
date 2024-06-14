@@ -50,7 +50,10 @@
         style="display: flex;"
         @click="showUploadDialog"
       >
-        <el-button type="text">
+        <el-button
+          type="primary"
+          :link="true"
+        >
           <el-tooltip
             class="item"
             effect="dark"
@@ -70,7 +73,8 @@
       </div>
       <div>
         <el-button
-          type="text"
+          type="primary"
+          :link="true"
           @click="showUrlDialog"
         >
           <el-tooltip
@@ -95,7 +99,8 @@
         v-if="isShowCreateNewFolder"
       >
         <el-button
-          type="text"
+          type="primary"
+          :link="true"
           @click="handleCreateFolder"
         >
           <el-tooltip
@@ -119,7 +124,10 @@
       <div
         @click="showDownloadDialog"
       >
-        <el-button type="text">
+        <el-button
+          type="primary"
+          :link="true"
+        >
           <el-tooltip
             class="item"
             effect="dark"
@@ -142,7 +150,10 @@
         v-if="isShowRenameFileIcon"
         @click="handleBatchRenameFile"
       >
-        <el-button type="text">
+        <el-button
+          type="primary"
+          :link="true"
+        >
           <el-tooltip
             class="item"
             effect="dark"
@@ -162,7 +173,10 @@
         </el-button>
       </div>
       <div>
-        <el-button type="text">
+        <el-button
+          type="primary"
+          :link="true"
+        >
           <el-tooltip
             class="item"
             effect="dark"
@@ -177,7 +191,7 @@
               <el-icon
                 class="icon"
                 size="25px"
-                :color="selectedItems.length > 0 ? 'red' : 'gray'"
+                :color="selectedItems.length > 0 ? '#409EFF' : 'gray'"
                 style="margin-left: 10px;"
                 @click="handleBatchCopyLink(manageStore.config.settings.pasteFormat)"
               >
@@ -207,7 +221,10 @@
         </el-button>
       </div>
       <div>
-        <el-button type="text">
+        <el-button
+          type="primary"
+          :link="true"
+        >
           <el-tooltip
             class="item"
             effect="dark"
@@ -219,7 +236,7 @@
             <el-icon
               class="icon"
               size="25px"
-              :color="selectedItems.length > 0 ? 'red' : 'gray'"
+              :color="selectedItems.length > 0 ? '#409EFF' : 'gray'"
               style="margin-left: 10px;"
               @click="handleBatchCopyInfo"
             >
@@ -230,7 +247,8 @@
       </div>
       <div>
         <el-button
-          type="text"
+          type="primary"
+          :link="true"
           @click="forceRefreshFileList"
         >
           <el-tooltip
@@ -400,23 +418,12 @@
           {{ $T('MANAGE_BUCKET_SORT_TITLE') }}
         </el-button>
         <template #dropdown>
-          <el-dropdown-item @click="sortFile('name')">
-            {{ $T('MANAGE_BUCKET_SORT_NAME') }}
-          </el-dropdown-item>
-          <el-dropdown-item @click="sortFile('size')">
-            {{ $T('MANAGE_BUCKET_SORT_SIZE') }}
-          </el-dropdown-item>
-          <el-dropdown-item @click="sortFile('ext')">
-            {{ $T('MANAGE_BUCKET_SORT_TYPE') }}
-          </el-dropdown-item>
-          <el-dropdown-item @click="sortFile('time')">
-            {{ $T('MANAGE_BUCKET_SORT_TIME') }}
-          </el-dropdown-item>
-          <el-dropdown-item @click="sortFile('check')">
-            {{ $T('MANAGE_BUCKET_SORT_SELECTED') }}
-          </el-dropdown-item>
-          <el-dropdown-item @click="sortFile('init')">
-            {{ $T('MANAGE_BUCKET_INIT') }}
+          <el-dropdown-item
+            v-for="item in sortTypeList"
+            :key="item"
+            @click="sortFile(item as any)"
+          >
+            {{ $T(`MANAGE_BUCKET_SORT_${item.toUpperCase()}` as any) }}
           </el-dropdown-item>
         </template>
       </el-dropdown>
@@ -634,46 +641,11 @@ https://www.baidu.com/img/bd_logo1.png"
                     <template #dropdown>
                       <el-dropdown-menu>
                         <el-dropdown-item
-                          @click="async () => {
-                            copyToClipboard(await formatLink(item.url, item.fileName, 'url'))
-                          }"
+                          v-for="format in linkFormatList"
+                          :key="format"
+                          @click="copyLink(item, format)"
                         >
-                          Url
-                        </el-dropdown-item>
-                        <el-dropdown-item
-                          @click="async () => {
-                            copyToClipboard(await formatLink(item.url, item.fileName, 'markdown'))
-                          }"
-                        >
-                          Markdown
-                        </el-dropdown-item>
-                        <el-dropdown-item
-                          @click="async () => {
-                            copyToClipboard(await formatLink(item.url, item.fileName, 'markdown-with-link'))
-                          }"
-                        >
-                          Markdown-link
-                        </el-dropdown-item>
-                        <el-dropdown-item
-                          @click="async () => {
-                            copyToClipboard(await formatLink(item.url, item.fileName, 'html'))
-                          }"
-                        >
-                          Html
-                        </el-dropdown-item>
-                        <el-dropdown-item
-                          @click="async () => {
-                            copyToClipboard(await formatLink(item.url, item.fileName, 'bbcode'))
-                          }"
-                        >
-                          BBCode
-                        </el-dropdown-item>
-                        <el-dropdown-item
-                          @click="async () => {
-                            copyToClipboard(await formatLink(item.url, item.fileName, 'custom', manageStore.config.settings.customPasteFormat))
-                          }"
-                        >
-                          {{ $T('MANAGE_BUCKET_URL_FORMAT_CUSTOM') }}
+                          {{ $T(`MANAGE_BUCKET_URL_FORMAT_${format.toUpperCase().replace(/-/g, '_')}` as any) }}
                         </el-dropdown-item>
                         <el-dropdown-item
                           v-if="isShowPresignedUrl"
@@ -821,7 +793,7 @@ https://www.baidu.com/img/bd_logo1.png"
         <div
           v-if="!tableData.length"
           id="upload-dragger"
-          style="position: relative;top: 0;right: 0;heigth: 100%;width: 100%;display: flex;justify-content: center;align-items: center;"
+          style="position: relative;top: 0;right: 0;height: 100%;width: 100%;display: flex;justify-content: center;align-items: center;"
         >
           <div
             class="upload-dragger__text"
@@ -1246,7 +1218,7 @@ https://www.baidu.com/img/bd_logo1.png"
       append-to-body
     >
       <div
-        style="-webkit-user-select: text"
+        style="-webkit-user-select: text; user-select: text;"
         v-html="markDownContent"
       />
       <el-button
@@ -1271,7 +1243,7 @@ https://www.baidu.com/img/bd_logo1.png"
       append-to-body
     >
       <highlightjs
-        style="-webkit-user-select: text;"
+        style="-webkit-user-select: text; user-select: text;"
         language="js"
         :code="textfileContent"
       />
@@ -1466,37 +1438,8 @@ https://www.baidu.com/img/bd_logo1.png"
 </template>
 
 <script lang="tsx" setup>
-// Vue 相关
-import { ref, reactive, watch, onBeforeMount, computed, onBeforeUnmount } from 'vue'
-
-// Vue Router 相关
-import { useRoute } from 'vue-router'
-
-// Element Plus 图标
-import { InfoFilled, Grid, Fold, Close, Folder, FolderAdd, Upload, CircleClose, Loading, CopyDocument, Edit, UploadFilled, Link, Refresh, ArrowRight, HomeFilled, Document, Coin, Download, DeleteFilled, Sort, FolderOpened } from '@element-plus/icons-vue'
-
-// 状态管理相关
-import { useManageStore } from '../store/manageStore'
-
-// 工具函数
-import { customRenameFormatTable, customStrMatch, customStrReplace, renameFile, formatLink, formatFileName, getFileIconPath, formatFileSize, getExtension, isValidUrl, svg } from '../utils/common'
-
-// 静态工具函数
-import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '../utils/static'
-
-// Electron 相关
-import { ipcRenderer, clipboard, IpcRendererEvent } from 'electron'
-
-// 数据库操作
-import { fileCacheDbInstance } from '../store/bucketFileDb'
-
-// 工具函数
-import { trimPath } from '~/main/manage/utils/common'
-
-// Axios
 import axios from 'axios'
-
-// Element Plus 组件
+import { ipcRenderer, clipboard, IpcRendererEvent } from 'electron'
 import {
   ElMessage, ElMessageBox, ElNotification,
   ElButton,
@@ -1513,43 +1456,31 @@ import {
   ElTag,
   ElCard
 } from 'element-plus'
-
-// 类型声明
 import type { Column, RowClassNameGetter } from 'element-plus'
-
-// 状态管理相关
-import { useFileTransferStore, useDownloadFileTransferStore } from '@/manage/store/manageStore'
-
-// UUID
-import { v4 as uuidv4 } from 'uuid'
-
-// 路径处理库
-import path from 'path'
-
-// 文件系统库
+import { InfoFilled, Grid, Fold, Close, Folder, FolderAdd, Upload, CircleClose, Loading, CopyDocument, Edit, UploadFilled, Link, Refresh, ArrowRight, HomeFilled, Document, Coin, Download, DeleteFilled, Sort, FolderOpened } from '@element-plus/icons-vue'
 import fs from 'fs-extra'
-
-// 数据发送工具函数
-import { getConfig, saveConfig } from '../utils/dataSender'
-
-// Markdown 解析库
 import { marked } from 'marked'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
+import { ref, reactive, watch, onBeforeMount, computed, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
 
-// 文本文件扩展名列表
-import { textFileExt } from '../utils/textfile'
+import { fileCacheDbInstance } from '@/manage/store/bucketFileDb'
+import { useFileTransferStore, useDownloadFileTransferStore, useManageStore } from '@/manage/store/manageStore'
+import { customRenameFormatTable, customStrMatch, customStrReplace, renameFile, formatLink, formatFileName, getFileIconPath, formatFileSize, isValidUrl, svg } from '@/manage/utils/common'
+import { getConfig, saveConfig } from '@/manage/utils/dataSender'
+import { textFileExt } from '@/manage/utils/textfile'
+import { videoExt } from '@/manage/utils/videofile'
 
-// 视频文件扩展名列表
-import { videoExt } from '../utils/videofile'
-
-// 组件
 import ImageWebdav from '@/components/ImageWebdav.vue'
 import ImageLocal from '@/components/ImageLocal.vue'
 import ImageWebdavTsx from '@/components/ImageWebdavTsx'
 
-// 国际化函数
 import { T as $T } from '@/i18n'
 
-import { IUploadTask, IDownloadTask } from '~/main/manage/datastore/upDownTaskQueue'
+import { getExtension, trimPath } from '#/utils/common'
+import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '#/utils/static'
+import { IUploadTask, IDownloadTask } from '#/types/manage'
 
 /*
 configMap:{
@@ -1571,8 +1502,10 @@ const linkFormatArray = [
   { key: 'BBCode', value: 'bbcode' },
   { key: 'Custom', value: 'custom' }
 ]
+const linkFormatList = ['url', 'markdown', 'markdown-with-link', 'html', 'bbcode', 'custom']
 
-type sortTypeList = 'name' | 'size' | 'time' | 'ext' | 'check' | 'init'
+type ISortTypeList = 'name' | 'size' | 'time' | 'ext' | 'check' | 'init'
+const sortTypeList = ['name', 'size', 'time', 'ext', 'check', 'init']
 
 // 路由相关
 const route = useRoute()
@@ -2230,7 +2163,7 @@ async function resetParam (force: boolean = false) {
     const cachedData = await searchExistFileList()
     if (cachedData.length > 0) {
       currentPageFilesInfo.push(...cachedData[0].value.fullList)
-      const sortType = localStorage.getItem('sortType') as sortTypeList || 'init'
+      const sortType = localStorage.getItem('sortType') as ISortTypeList || 'init'
       sortFile(sortType)
       isShowLoadingPage.value = false
       return
@@ -2240,7 +2173,7 @@ async function resetParam (force: boolean = false) {
     const res = await getBucketFileList() as IStringKeyMap
     if (res.success) {
       currentPageFilesInfo.push(...res.fullList)
-      const sortType = localStorage.getItem('sortType') as sortTypeList || 'init'
+      const sortType = localStorage.getItem('sortType') as ISortTypeList || 'init'
       sortFile(sortType)
       if (res.isTruncated && paging.value) {
         pagingMarkerStack.push(pagingMarker.value)
@@ -2311,7 +2244,7 @@ const changePage = async (cur: number | undefined, prev: number | undefined) => 
   }
   const isForwardNavigation = cur > prev
   const newPageNumber = isForwardNavigation ? prev + 1 : prev - 1
-  const sortType = localStorage.getItem('sortType') as sortTypeList || 'init'
+  const sortType = localStorage.getItem('sortType') as ISortTypeList || 'init'
 
   isShowLoadingPage.value = true
   currentPageNumber.value = newPageNumber
@@ -2771,6 +2704,10 @@ function handleBatchCopyInfo () {
   ElMessage.success(`${$T('MANAGE_BUCKET_BATCH_COPY_INFO_MSG_A')} ${selectedItems.value.length} ${$T('MANAGE_BUCKET_BATCH_COPY_INFO_MSG_B')}`)
 }
 
+async function copyLink (item: any, type: string) {
+  copyToClipboard(await formatLink(item.url, item.fileName, type, manageStore.config.settings.customPasteFormat))
+}
+
 async function handleBatchCopyLink (type: string) {
   if (!selectedItems.value.length) {
     ElMessage.warning($T('MANAGE_BUCKET_BATCH_COPY_URL_ERROR_MSG'))
@@ -2844,7 +2781,7 @@ async function getBucketFileListBackStage () {
   fileTransferInterval = setInterval(() => {
     const currentFileList = fileTransferStore.getFileTransferList()
     currentPageFilesInfo.splice(0, currentPageFilesInfo.length, ...currentFileList)
-    const sortType = localStorage.getItem('sortType') as sortTypeList || 'init'
+    const sortType = localStorage.getItem('sortType') as ISortTypeList || 'init'
     sortFile(sortType)
     const table = fileCacheDbInstance.table(currentPicBedName.value)
     table.put({

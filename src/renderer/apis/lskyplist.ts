@@ -1,6 +1,7 @@
-import { deleteFailedLog, deleteLog } from '@/utils/common'
 import axios, { AxiosResponse } from 'axios'
 import https from 'https'
+
+import { deleteFailedLog, deleteLog } from '#/utils/deleteLog'
 
 export default class LskyplistApi {
   static async delete (configMap: IStringKeyMap): Promise<boolean> {

@@ -58,7 +58,8 @@
                   :class="{
                     disabled: scope.row.enable
                   }"
-                  type="text"
+                  type="info"
+                  :link="true"
                   @click="toggleEnable(scope.row)"
                 >
                   {{ scope.row.enable ? $T('SHORTCUT_DISABLE') : $T('SHORTCUT_ENABLE') }}
@@ -66,7 +67,8 @@
                 <el-button
                   class="edit"
                   size="small"
-                  type="text"
+                  type="info"
+                  :link="true"
                   @click="openKeyBindingDialog(scope.row, scope.$index)"
                 >
                   {{ $T('SHORTCUT_EDIT') }}
@@ -114,25 +116,17 @@
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// 按键绑定工具函数
-import keyBinding from '@/utils/key-binding'
-
-// Electron 相关
-import { ipcRenderer, IpcRendererEvent } from 'electron'
-
-// 事件常量
-import { TOGGLE_SHORTKEY_MODIFIED_MODE } from '#/events/constants'
-
-// Vue 生命周期钩子
 import { onBeforeUnmount, onBeforeMount, ref, watch } from 'vue'
 
-// 数据发送工具函数
-import { getConfig, sendToMain } from '@/utils/dataSender'
-
-// 国际化函数
 import { T as $T } from '@/i18n'
-import { configPaths } from '~/universal/utils/configPaths'
+import { sendRPC, triggerRPC } from '@/utils/common'
+import { getConfig } from '@/utils/dataSender'
+import keyBinding from '@/utils/key-binding'
+
+import { configPaths } from '#/utils/configPaths'
+import { IRPCActionType } from '#/types/enum'
 
 const list = ref<IShortKeyConfig[]>([])
 const keyBindingVisible = ref(false)
@@ -151,7 +145,7 @@ onBeforeMount(async () => {
 })
 
 watch(keyBindingVisible, (val: boolean) => {
-  sendToMain(TOGGLE_SHORTKEY_MODIFIED_MODE, val)
+  sendRPC(IRPCActionType.SHORTKEY_TOGGLE_SHORTKEY_MODIFIED_MODE, val)
 })
 
 function calcOrigin (item: string) {
@@ -166,7 +160,7 @@ function calcOriginShowName (item: string) {
 function toggleEnable (item: IShortKeyConfig) {
   const status = !item.enable
   item.enable = status
-  sendToMain('bindOrUnbindShortKey', item, item.from)
+  sendRPC(IRPCActionType.SHORTKEY_BIND_OR_UNBIND, item, item.from)
 }
 
 function keyDetect (event: KeyboardEvent) {
@@ -189,24 +183,24 @@ async function confirmKeyBinding () {
   const oldKey = await getConfig<string>(`settings.shortKey.${command.value}.key`)
   const config = Object.assign({}, list.value[currentIndex.value])
   config.key = shortKey.value
-  sendToMain('updateShortKey', config, oldKey, config.from)
-  ipcRenderer.once('updateShortKeyResponse', (_: IpcRendererEvent, result) => {
-    if (result) {
-      keyBindingVisible.value = false
-      list.value[currentIndex.value].key = shortKey.value
-    }
-  })
+  const result = await triggerRPC<boolean>(IRPCActionType.SHORTKEY_UPDATE, config, oldKey, config.from)
+  if (result) {
+    keyBindingVisible.value = false
+    list.value[currentIndex.value].key = shortKey.value
+  }
 }
 
 onBeforeUnmount(() => {
-  sendToMain(TOGGLE_SHORTKEY_MODIFIED_MODE, false)
+  sendRPC(IRPCActionType.SHORTKEY_TOGGLE_SHORTKEY_MODIFIED_MODE, false)
 })
 </script>
+
 <script lang="ts">
 export default {
   name: 'ShortkeyPage'
 }
 </script>
+
 <style lang='stylus'>
 #shortcut-page
   .shortcut-page-table-border

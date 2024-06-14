@@ -7,7 +7,7 @@
         PicList - {{ version }}
       </div>
       <div
-        v-if="os !== 'darwin'"
+        v-if="osGlobal !== 'darwin'"
         class="handle-bar"
       >
         <el-icon
@@ -48,8 +48,8 @@
       </div>
     </div>
     <el-progress
-      v-if="progressShow"
-      :percentage="progressPercentage"
+      v-if="isShowprogress"
+      :percentage="progress"
       :stroke-width="7"
       :text-inside="true"
       :show-text="false"
@@ -68,7 +68,6 @@
           :default-active="defaultActive"
           :unique-opened="true"
           @select="handleSelect"
-          @open="handleGetPicPeds"
         >
           <el-menu-item :index="routerConfig.UPLOAD_PAGE">
             <el-icon>
@@ -101,7 +100,7 @@
               <span>{{ $T('PICBEDS_SETTINGS') }}</span>
             </template>
             <template
-              v-for="item in picBed"
+              v-for="item in picBedGlobal"
             >
               <el-menu-item
                 v-if="item.visible"
@@ -188,7 +187,7 @@
             teleported
           >
             <el-option
-              v-for="item in picBed"
+              v-for="item in picBedGlobal"
               :key="item.type"
               :label="item.name"
               :value="item.type"
@@ -216,8 +215,8 @@
     <input-box-dialog />
   </div>
 </template>
+
 <script lang="ts" setup>
-// Element Plus 图标
 import {
   Tools,
   UploadFilled,
@@ -232,82 +231,53 @@ import {
   Link,
   ArrowUpBold
 } from '@element-plus/icons-vue'
-
-// Element Plus 消息框组件
-import { ElMessage as $message, ElMessageBox } from 'element-plus'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// Vue 相关
-import { ref, onBeforeUnmount, Ref, onBeforeMount, watch, nextTick, reactive } from 'vue'
-
-// Vue Router 相关
-import { onBeforeRouteUpdate, useRouter } from 'vue-router'
-
-// 二维码组件
-import QrcodeVue from 'qrcode.vue'
-
-// Lodash pick 函数
-import pick from 'lodash/pick'
-
-// 根目录 package.json
-import pkg from 'root/package.json'
-
-// 路由配置常量
-import * as config from '@/router/config'
-
-// Electron 相关
 import {
   ipcRenderer,
   IpcRendererEvent,
   clipboard
 } from 'electron'
+import { ElMessage as $message, ElMessageBox } from 'element-plus'
+import pick from 'lodash/pick'
+import QrcodeVue from 'qrcode.vue'
+import { ref, onBeforeUnmount, Ref, onBeforeMount, watch, nextTick, reactive } from 'vue'
+import { onBeforeRouteUpdate, useRouter } from 'vue-router'
 
-// 输入框对话框组件
 import InputBoxDialog from '@/components/InputBoxDialog.vue'
+import { T as $T } from '@/i18n/index'
+import * as config from '@/router/config'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import { sendRPC } from '@/utils/common'
+import { osGlobal, picBedGlobal, updatePicBedGlobal } from '@/utils/global'
 
-// 事件常量
 import {
-  MINIMIZE_WINDOW,
-  CLOSE_WINDOW,
-  SHOW_MAIN_PAGE_MENU,
-  SHOW_MAIN_PAGE_QRCODE,
-  GET_PICBEDS
-} from '~/universal/events/constants'
+  SHOW_MAIN_PAGE_QRCODE
+} from '#/events/constants'
+import { configPaths, manualPageOpenType } from '#/utils/configPaths'
+import { II18nLanguage, IRPCActionType } from '#/types/enum'
 
-// 数据发送工具函数
-import { getConfig, saveConfig, sendToMain } from '@/utils/dataSender'
-import { openURL } from '@/utils/common'
-import { configPaths, manualPageOpenType } from '~/universal/utils/configPaths'
-import { II18nLanguage } from '~/universal/types/enum'
+import pkg from 'root/package.json'
 
 const version = ref(process.env.NODE_ENV === 'production' ? pkg.version : 'Dev')
 const routerConfig = reactive(config)
 const defaultActive = ref(routerConfig.UPLOAD_PAGE)
-const os = ref('')
 const $router = useRouter()
-const picBed: Ref<IPicBedType[]> = ref([])
 const qrcodeVisible = ref(false)
 const picBedConfigString = ref('')
 const choosedPicBedForQRCode: Ref<string[]> = ref([])
 const isAlwaysOnTop = ref(false)
 const keepAlivePages = $router.getRoutes().filter(item => item.meta.keepAlive).map(item => item.name as string)
 
-const progressShow = ref(false)
-const progressPercentage = ref(0)
+const isShowprogress = ref(false)
+const progress = ref(0)
 
 onBeforeMount(() => {
-  os.value = process.platform
-  sendToMain(GET_PICBEDS)
-  ipcRenderer.on(GET_PICBEDS, getPicBeds)
-  handleGetPicPeds()
+  updatePicBedGlobal()
   ipcRenderer.on(SHOW_MAIN_PAGE_QRCODE, () => {
     qrcodeVisible.value = true
   })
   ipcRenderer.on('updateProgress', (_event: IpcRendererEvent, data: { progress: number}) => {
-    progressShow.value = data.progress !== 100 && data.progress !== 0
-    progressPercentage.value = data.progress
+    isShowprogress.value = data.progress !== 100 && data.progress !== 0
+    progress.value = data.progress
   })
 })
 
@@ -321,17 +291,13 @@ watch(() => choosedPicBedForQRCode, (val) => {
   }
 }, { deep: true })
 
-const handleGetPicPeds = () => {
-  sendToMain(GET_PICBEDS)
-}
-
 const handleSelect = async (index: string) => {
   defaultActive.value = index
   if (index === routerConfig.DocumentPage) {
     const manualPageOpenSetting = await getConfig<manualPageOpenType>(configPaths.settings.manualPageOpen)
     const lang = await getConfig(configPaths.settings.language) || II18nLanguage.ZH_CN
-    const openManual = () => ipcRenderer.send('openManualWindow')
-    const openExternal = () => openURL(lang === II18nLanguage.ZH_CN ? 'https://piclist.cn/app.html' : 'https://piclist.cn/en/app.html')
+    const openManual = () => sendRPC(IRPCActionType.OPEN_MANUAL_WINDOW)
+    const openExternal = () => sendRPC(IRPCActionType.OPEN_URL, lang === II18nLanguage.ZH_CN ? 'https://piclist.cn/app.html' : 'https://piclist.cn/en/app.html')
 
     if (!manualPageOpenSetting) {
       ElMessageBox.confirm($T('MANUAL_PAGE_OPEN_TIP'), $T('MANUAL_PAGE_OPEN_TIP_TITLE'), {
@@ -368,19 +334,19 @@ const handleSelect = async (index: string) => {
 }
 
 function minimizeWindow () {
-  sendToMain(MINIMIZE_WINDOW)
+  sendRPC(IRPCActionType.MINIMIZE_WINDOW)
 }
 
 function closeWindow () {
-  sendToMain(CLOSE_WINDOW)
+  sendRPC(IRPCActionType.CLOSE_WINDOW)
 }
 
 function openMenu () {
-  sendToMain(SHOW_MAIN_PAGE_MENU)
+  sendRPC(IRPCActionType.SHOW_MAIN_PAGE_MENU)
 }
 
 function openMiniWindow () {
-  sendToMain('openMiniWindow')
+  sendRPC(IRPCActionType.OPEN_MINI_WINDOW)
 }
 
 function handleCopyPicBedConfig () {
@@ -388,13 +354,9 @@ function handleCopyPicBedConfig () {
   $message.success($T('COPY_PICBED_CONFIG_SUCCEED'))
 }
 
-function getPicBeds (event: IpcRendererEvent, picBeds: IPicBedType[]) {
-  picBed.value = picBeds
-}
-
 function setAlwaysOnTop () {
   isAlwaysOnTop.value = !isAlwaysOnTop.value
-  sendToMain('toggleMainWindowAlwaysOnTop', isAlwaysOnTop.value)
+  sendRPC(IRPCActionType.MAIN_WINDOW_ON_TOP)
 }
 
 onBeforeRouteUpdate(async (to) => {
@@ -406,7 +368,6 @@ onBeforeRouteUpdate(async (to) => {
 })
 
 onBeforeUnmount(() => {
-  ipcRenderer.removeListener(GET_PICBEDS, getPicBeds)
   ipcRenderer.removeAllListeners(SHOW_MAIN_PAGE_QRCODE)
   ipcRenderer.removeAllListeners('updateProgress')
 })

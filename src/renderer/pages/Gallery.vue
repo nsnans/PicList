@@ -24,7 +24,8 @@
           @change="handleDeleteCloudFile"
         />
         <el-button
-          type="text"
+          type="primary"
+          :link="true"
           @click="refreshPage"
         >
           <el-tooltip
@@ -67,7 +68,7 @@
                 teleported
               >
                 <el-option
-                  v-for="item in picBed"
+                  v-for="item in picBedGlobal"
                   :key="item.type"
                   :label="item.name"
                   :value="item.type"
@@ -145,13 +146,13 @@
                     {{ $T('MANAGE_BUCKET_SORT_NAME') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="sortFile('ext')">
-                    {{ $T('MANAGE_BUCKET_SORT_TYPE') }}
+                    {{ $T('MANAGE_BUCKET_SORT_EXT') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="sortFile('time')">
                     {{ $T('MANAGE_BUCKET_SORT_TIME') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="sortFile('check')">
-                    {{ $T('MANAGE_BUCKET_SORT_SELECTED') }}
+                    {{ $T('MANAGE_BUCKET_SORT_CHECK') }}
                   </el-dropdown-item>
                 </template>
               </el-dropdown>
@@ -457,50 +458,30 @@
     </el-dialog>
   </div>
 </template>
+
 <script lang="ts" setup>
-// 类型声明
-import type { IResult } from '@picgo/store/dist/types'
-
-// 事件常量
-import { PASTE_TEXT, GET_PICBEDS } from '#/events/constants'
-
-// Element Plus 组件
-import { CheckboxValueType, ElMessageBox, ElNotification, ElMessage } from 'element-plus'
-
-// Element Plus 图标
-import { InfoFilled, Close, CaretBottom, Document, Edit, Delete, CaretTop, Sort, Refresh } from '@element-plus/icons-vue'
-
-// Electron 相关
 import {
   ipcRenderer,
-  clipboard,
-  IpcRendererEvent
+  clipboard
 } from 'electron'
-
-// Vue 相关
-import { computed, nextTick, onActivated, onBeforeUnmount, onBeforeMount, reactive, ref, watch } from 'vue'
-
-// 数据发送工具函数
-import { getConfig, saveConfig, sendToMain } from '@/utils/dataSender'
-
-// Vue Router 相关
-import { onBeforeRouteUpdate } from 'vue-router'
-
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// 数据库操作
-import $$db from '@/utils/db'
-
-// API 接口
-import ALLApi from '@/apis/allApi'
-
-// 工具函数
-import { customRenameFormatTable, customStrMatch, customStrReplace } from '../manage/utils/common'
-import { picBedsCanbeDeleted } from '#/utils/static'
+import { CheckboxValueType, ElMessageBox, ElNotification, ElMessage } from 'element-plus'
+import { InfoFilled, Close, CaretBottom, Document, Edit, Delete, CaretTop, Sort, Refresh } from '@element-plus/icons-vue'
 import path from 'path'
-import { configPaths } from '~/universal/utils/configPaths'
-import { IPasteStyle } from '~/universal/types/enum'
+import { computed, nextTick, onActivated, onBeforeUnmount, onBeforeMount, reactive, ref, watch } from 'vue'
+import { onBeforeRouteUpdate } from 'vue-router'
+import type { IResult } from '@picgo/store/dist/types'
+
+import ALLApi from '@/apis/allApi'
+import { T as $T } from '@/i18n/index'
+import { customRenameFormatTable, customStrMatch, customStrReplace } from '@/manage/utils/common'
+import { sendRPC, triggerRPC } from '@/utils/common'
+import { getConfig, saveConfig } from '@/utils/dataSender'
+import $$db from '@/utils/db'
+import { picBedGlobal } from '@/utils/global'
+
+import { configPaths } from '#/utils/configPaths'
+import { picBedsCanbeDeleted } from '#/utils/static'
+import { IPasteStyle, IRPCActionType } from '#/types/enum'
 
 const images = ref<ImgInfo[]>([])
 const dialogVisible = ref(false)
@@ -547,7 +528,6 @@ const mathcedCount = computed(() => {
   return matchedFiles.length
 })
 const dateRange = ref('')
-const picBed = ref<IPicBedType[]>([])
 onBeforeRouteUpdate((to, from) => {
   if (from.name === 'gallery') {
     clearChoosedList()
@@ -569,8 +549,6 @@ onBeforeMount(async () => {
       updateGallery()
     })
   })
-  sendToMain(GET_PICBEDS)
-  ipcRenderer.on(GET_PICBEDS, getPicBeds)
   updateGallery()
 
   document.addEventListener('keydown', handleDetectShiftKey)
@@ -604,10 +582,6 @@ const isAllSelected = computed(() => {
 
 function formatFileName (name: string) {
   return path.basename(name)
-}
-
-function getPicBeds (event: IpcRendererEvent, picBeds: IPicBedType[]) {
-  picBed.value = picBeds
 }
 
 function getGallery (): IGalleryItem[] {
@@ -654,7 +628,7 @@ function getGallery (): IGalleryItem[] {
 }
 
 async function updateGallery () {
-  images.value = (await $$db.get({ orderBy: 'desc' })).data
+  images.value = (await $$db.get({ orderBy: 'desc' }))!.data
 }
 
 watch(() => filterList, () => {
@@ -677,7 +651,7 @@ function handleChooseImage (val: CheckboxValueType, index: number) {
 }
 
 function refreshPage () {
-  ipcRenderer.send('refreshSettingWindow')
+  sendRPC(IRPCActionType.REFRESH_SETTING_WINDOW)
 }
 
 function clearChoosedList () {
@@ -712,7 +686,7 @@ function handleClose () {
 
 async function copy (item: ImgInfo) {
   item.config = JSON.parse(JSON.stringify(item.config) || '{}')
-  const copyLink = await ipcRenderer.invoke(PASTE_TEXT, item)
+  const copyLink = await triggerRPC<string>(IRPCActionType.GALLERY_PASTE_TEXT, item)
   const obj = {
     title: $T('COPY_LINK_SUCCEED'),
     body: copyLink
@@ -751,7 +725,7 @@ function remove (item: ImgInfo) {
       }
     }
     await $$db.removeById(item.id!)
-    sendToMain('removeFiles', [file])
+    sendRPC(IRPCActionType.GALLERY_REMOVE_FILES, [file])
     const obj = {
       title: $T('OPERATION_SUCCEED'),
       body: ''
@@ -876,7 +850,7 @@ function multiRemove () {
         title: $T('OPERATION_SUCCEED'),
         body: ''
       }
-      sendToMain('removeFiles', files)
+      sendRPC(IRPCActionType.GALLERY_REMOVE_FILES, files)
       const myNotification = new Notification(obj.title, obj)
       myNotification.onclick = () => {
         return true
@@ -898,8 +872,8 @@ async function multiCopy () {
       if (choosedList[key]) {
         const item = await $$db.getById<ImgInfo>(key)
         if (item) {
-          const txt = await ipcRenderer.invoke(PASTE_TEXT, item)
-          copyString.push(txt)
+          const txt = await triggerRPC<string>(IRPCActionType.GALLERY_PASTE_TEXT, item)
+          copyString.push(txt!)
           choosedList[key] = false
         }
       }
@@ -1044,7 +1018,6 @@ function handleBatchRename () {
 
 onBeforeUnmount(() => {
   ipcRenderer.removeAllListeners('updateGallery')
-  ipcRenderer.removeListener(GET_PICBEDS, getPicBeds)
 })
 
 onActivated(async () => {

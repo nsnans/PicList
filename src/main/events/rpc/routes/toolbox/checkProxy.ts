@@ -1,24 +1,17 @@
-// External dependencies
-import fs from 'fs-extra'
+
 import axios, { AxiosRequestConfig } from 'axios'
+import fs from 'fs-extra'
+import { IConfig } from 'piclist'
 import tunnel from 'tunnel'
 
-// Electron modules
+import { dbPathChecker } from '@core/datastore/dbChecker'
 
-// Custom utilities and modules
-import { dbPathChecker } from '~/main/apis/core/datastore/dbChecker'
-import { sendToolboxResWithType } from './utils'
+import { sendToolboxResWithType } from '~/events/rpc/routes/toolbox/utils'
+import { T } from '~/i18n'
 
-// Custom types/enums
-import { IToolboxItemCheckStatus, IToolboxItemType } from '~/universal/types/enum'
+import { IToolboxItemCheckStatus, IToolboxItemType } from '#/types/enum'
 
-// External utility functions
-
-// Custom types/enums
-import { IConfig } from 'piclist'
-import { T } from '~/main/i18n'
-
-const getProxy = (proxyStr: string): AxiosRequestConfig['proxy'] | false => {
+function getProxy (proxyStr: string): AxiosRequestConfig['proxy'] | null {
   if (proxyStr) {
     try {
       const proxyOptions = new URL(proxyStr)
@@ -27,10 +20,9 @@ const getProxy = (proxyStr: string): AxiosRequestConfig['proxy'] | false => {
         port: parseInt(proxyOptions.port || '0', 10),
         protocol: proxyOptions.protocol
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
-  return false
+  return null
 }
 
 const sendToolboxRes = sendToolboxResWithType(IToolboxItemType.HAS_PROBLEM_WITH_PROXY)

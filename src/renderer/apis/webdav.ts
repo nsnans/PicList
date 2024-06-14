@@ -1,6 +1,7 @@
-import { deleteFailedLog, deleteLog } from '@/utils/common'
 import { AuthType, WebDAVClientOptions, createClient } from 'webdav'
-import { formatEndpoint } from '~/main/manage/utils/common'
+
+import { deleteFailedLog, deleteLog } from '#/utils/deleteLog'
+import { formatEndpoint } from '#/utils/common'
 
 interface IConfigMap {
   fileName: string

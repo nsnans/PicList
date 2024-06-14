@@ -4,15 +4,15 @@
   >
     <div
       id="upload-area"
-      :class="{ 'is-dragover': dragover, uploading: showProgress, linux: os === 'linux' }"
+      :class="{ 'is-dragover': dragover, uploading: isShowingProgress, linux: osGlobal === 'linux' }"
       :style="{ backgroundPosition: '0 ' + progress + '%'}"
       @drop.prevent="onDrop"
       @dragover.prevent="dragover = true"
       @dragleave.prevent="dragover = false"
     >
       <img
-        v-if="!dragover && !showProgress"
-        :src="logoPath.value ? logoPath.value : require('../assets/squareLogo.png')"
+        v-if="!dragover && !isShowingProgress"
+        :src="logoPath ? logoPath : require('../assets/squareLogo.png')"
         style="width: 100%; height: 100%;border-radius: 50%;"
       >
       <div
@@ -29,56 +29,37 @@
     </div>
   </div>
 </template>
+
 <script lang="ts" setup>
-// 国际化函数
-import { T as $T } from '@/i18n/index'
-
-// Element Plus 消息框组件
 import { ElMessage as $message } from 'element-plus'
-
-// Electron 相关
 import {
   ipcRenderer,
   IpcRendererEvent
 } from 'electron'
-
-// Vue 生命周期钩子
-import { onBeforeUnmount, onBeforeMount, ref, watch, reactive } from 'vue'
-
-// 事件常量
-import { SHOW_MINI_PAGE_MENU, SET_MINI_WINDOW_POS } from '~/universal/events/constants'
-
-// 工具函数
-import {
-  isUrl
-} from '~/universal/utils/common'
-
-// 数据发送工具函数
-import { getConfig, sendToMain } from '@/utils/dataSender'
-
-// Piclist 配置类型声明
 import { IConfig } from 'piclist'
+import { onBeforeUnmount, onBeforeMount, ref, watch } from 'vue'
 
-// 数据发送工具函数
-import { invokeToMain } from '@/manage/utils/dataSender'
+import { T as $T } from '@/i18n/index'
+import { invokeToMain, sendRPC } from '@/utils/common'
+import { getConfig } from '@/utils/dataSender'
+import { osGlobal } from '@/utils/global'
 
-const logoPath = reactive({
-  value: ''
-})
+import { isUrl } from '#/utils/common'
+import { IRPCActionType } from '#/types/enum'
+
+const logoPath = ref('')
 const dragover = ref(false)
 const progress = ref(0)
-const showProgress = ref(false)
-const showError = ref(false)
-const dragging = ref(false)
+const isShowingProgress = ref(false)
+const draggingState = ref(false)
 const wX = ref(-1)
 const wY = ref(-1)
 const screenX = ref(-1)
 const screenY = ref(-1)
-const os = ref('')
 
 async function initLogoPath () {
-  const config = (await getConfig<IConfig>())!
-  if (config !== undefined) {
+  const config = await getConfig<IConfig>()
+  if (config) {
     if (config.settings?.isCustomMiniIcon && config.settings?.customMiniIcon) {
       logoPath.value = 'data:image/jpg;base64,' + await invokeToMain('convertPathToBase64', config.settings.customMiniIcon)
     }
@@ -86,15 +67,13 @@ async function initLogoPath () {
 }
 
 onBeforeMount(async () => {
-  os.value = process.platform
   await initLogoPath()
   ipcRenderer.on('uploadProgress', (_: IpcRendererEvent, _progress: number) => {
     if (_progress !== -1) {
-      showProgress.value = true
+      isShowingProgress.value = true
       progress.value = _progress
     } else {
       progress.value = 100
-      showError.value = true
     }
   })
   ipcRenderer.on('updateMiniIcon', async () => {
@@ -108,8 +87,7 @@ onBeforeMount(async () => {
 watch(progress, (val) => {
   if (val === 100) {
     setTimeout(() => {
-      showProgress.value = false
-      showError.value = false
+      isShowingProgress.value = false
     }, 1000)
     setTimeout(() => {
       progress.value = 0
@@ -131,7 +109,7 @@ function onDrop (e: DragEvent) {
     } else if (items[0].type === 'text/plain') {
       const str = e.dataTransfer!.getData(items[0].type)
       if (isUrl(str)) {
-        sendToMain('uploadChoosedFiles', [{ path: str }])
+        sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, [{ path: str }])
       } else {
         $message.error($T('TIPS_DRAG_VALID_PICTURE_OR_URL'))
       }
@@ -145,7 +123,7 @@ function handleURLDrag (items: DataTransferItemList, dataTransfer: DataTransfer)
   const urlString = dataTransfer.getData(items[1].type)
   const urlMatch = urlString.match(/<img.*src="(.*?)"/)
   if (urlMatch) {
-    sendToMain('uploadChoosedFiles', [
+    sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, [
       {
         path: urlMatch[1]
       }
@@ -175,11 +153,11 @@ function ipcSendFiles (files: FileList) {
     }
     sendFiles.push(obj)
   })
-  sendToMain('uploadChoosedFiles', sendFiles)
+  sendRPC(IRPCActionType.UPLOAD_CHOOSED_FILES, sendFiles)
 }
 
 function handleMouseDown (e: MouseEvent) {
-  dragging.value = true
+  draggingState.value = true
   wX.value = e.pageX
   wY.value = e.pageY
   screenX.value = e.screenX
@@ -189,10 +167,10 @@ function handleMouseDown (e: MouseEvent) {
 function handleMouseMove (e: MouseEvent) {
   e.preventDefault()
   e.stopPropagation()
-  if (dragging.value) {
+  if (draggingState.value) {
     const xLoc = e.screenX - wX.value
     const yLoc = e.screenY - wY.value
-    sendToMain(SET_MINI_WINDOW_POS, {
+    sendRPC(IRPCActionType.SET_MINI_WINDOW_POS, {
       x: xLoc,
       y: yLoc,
       width: 64,
@@ -202,7 +180,7 @@ function handleMouseMove (e: MouseEvent) {
 }
 
 function handleMouseUp (e: MouseEvent) {
-  dragging.value = false
+  draggingState.value = false
   if (screenX.value === e.screenX && screenY.value === e.screenY) {
     if (e.button === 0) { // left mouse
       openUploadWindow()
@@ -213,7 +191,7 @@ function handleMouseUp (e: MouseEvent) {
 }
 
 function openContextMenu () {
-  sendToMain(SHOW_MINI_PAGE_MENU)
+  sendRPC(IRPCActionType.SHOW_MINI_PAGE_MENU)
 }
 
 onBeforeUnmount(() => {

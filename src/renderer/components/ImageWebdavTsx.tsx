@@ -1,9 +1,11 @@
-import { defineComponent, ref, onMounted, watch, computed } from 'vue'
-import { getFileIconPath } from '@/manage/utils/common'
-import { Loading } from '@element-plus/icons-vue'
-import { getAuthHeader } from '@/manage/utils/digestAuth'
-import { formatEndpoint } from '~/main/manage/utils/common'
 import { ElImage, ElIcon } from 'element-plus'
+import { defineComponent, ref, onMounted, watch, computed } from 'vue'
+import { Loading } from '@element-plus/icons-vue'
+
+import { getFileIconPath } from '@/manage/utils/common'
+import { getAuthHeader } from '@/manage/utils/digestAuth'
+
+import { formatEndpoint } from '#/utils/common'
 
 export default defineComponent({
   props: {
@@ -36,7 +38,7 @@ export default defineComponent({
     })
     const iconPath = computed(() => require(`../manage/pages/assets/icons/${getFileIconPath(props.item.fileName ?? '')}`))
 
-    async function getheaderOfWebdav (key: string) {
+    async function getWebdavHeader (key: string) {
       let headers = {} as any
       if (props.config.authType === 'digest') {
         const authHeader = await getAuthHeader(
@@ -59,7 +61,7 @@ export default defineComponent({
 
     const fetchImage = async () => {
       try {
-        const headers = await getheaderOfWebdav(props.item.key)
+        const headers = await getWebdavHeader(props.item.key)
         const res = await fetch(props.url, { method: 'GET', headers })
         if (res.status >= 200 && res.status < 300) {
           const blob = await res.blob()

@@ -1,4 +1,3 @@
-// AWS S3 相关
 import {
   S3Client,
   ListBucketsCommand,
@@ -12,52 +11,30 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   PutObjectCommand,
-  S3ClientConfig
+  S3ClientConfig,
+  CreateBucketCommand,
+  PutPublicAccessBlockCommand,
+  PutBucketAclCommand
 } from '@aws-sdk/client-s3'
-
-// AWS S3 上传和进度
 import { Upload, Progress } from '@aws-sdk/lib-storage'
-
-// AWS S3 请求签名
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-
-// HTTP 和 HTTPS 模块
-import https from 'https'
-import http, { AgentOptions } from 'http'
 import { NodeHttpHandler } from '@smithy/node-http-handler'
-
-// 日志记录器
-import { ManageLogger } from '../utils/logger'
-
-// 端点地址格式化函数、错误格式化函数、获取请求代理、获取文件 MIME 类型、新的下载器、并发异步任务池
-import { formatEndpoint, formatError, getAgent, getFileMimeType, NewDownloader, ConcurrencyPromisePool } from '../utils/common'
-
-// 是否为图片的判断函数、HTTP 代理格式化函数
-import { isImage, formatHttpProxy } from '@/manage/utils/common'
-
-// 窗口管理器
-import windowManager from 'apis/app/window/windowManager'
-
-// 枚举类型声明
-import { IWindowList } from '#/types/enum'
-
-// Electron 相关
 import { ipcMain, IpcMainEvent } from 'electron'
-
-// 上传下载任务队列
-import UpDownTaskQueue, { uploadTaskSpecialStatus, commonTaskStatus } from '../datastore/upDownTaskQueue'
-
-// 文件系统库
 import fs from 'fs-extra'
-
-// 路径处理库
+import http, { AgentOptions } from 'http'
+import https from 'https'
 import path from 'path'
 
-// 取消下载任务的加载文件列表、刷新下载文件传输列表
-import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '@/manage/utils/static'
+import windowManager from 'apis/app/window/windowManager'
 
-// dogecloudApi
-import { dogecloudApi, DogecloudToken, getTempToken } from '../utils/dogeAPI'
+import UpDownTaskQueue from '~/manage/datastore/upDownTaskQueue'
+import { formatError, getAgent, getFileMimeType, NewDownloader, ConcurrencyPromisePool } from '~/manage/utils/common'
+import { dogecloudApi, DogecloudToken, getTempToken } from '~/manage/utils/dogeAPI'
+import { ManageLogger } from '~/manage/utils/logger'
+
+import { commonTaskStatus, IWindowList, uploadTaskSpecialStatus } from '#/types/enum'
+import { isImage, formatEndpoint, formatHttpProxy } from '#/utils/common'
+import { cancelDownloadLoadingFileList, refreshDownloadFileTransferList } from '#/utils/static'
 
 class S3plistApi {
   baseOptions: S3ClientConfig
@@ -141,9 +118,10 @@ class S3plistApi {
   logParam = (error:any, method: string) =>
     this.logger.error(formatError(error, { class: 'S3plistApi', method }))
 
-  formatFolder (item: CommonPrefix, slicedPrefix: string): any {
+  formatFolder (item: CommonPrefix, slicedPrefix: string, urlPrefix: string): any {
     return {
       Key: item.Prefix,
+      url: `${urlPrefix}/${item.Prefix}`,
       fileSize: 0,
       formatedTime: '',
       fileName: item.Prefix?.replace(slicedPrefix, '').replace('/', ''),
@@ -169,6 +147,89 @@ class S3plistApi {
       match: false,
       isImage: isImage(fileName || '')
     }
+  }
+
+  async putPublicAccess (bucketName: string, client: S3Client) {
+    const input = {
+      Bucket: bucketName,
+      PublicAccessBlockConfiguration: {
+        BlockPublicAcls: false,
+        IgnorePublicAcls: false,
+        BlockPublicPolicy: false,
+        RestrictPublicBuckets: false
+      }
+    }
+    const command = new PutPublicAccessBlockCommand(input)
+    const data = await client.send(command)
+    if (data.$metadata.httpStatusCode !== 200) {
+      this.logParam(data, 'putPublicAccess')
+      throw new Error('manage.setting.putPublicAccessError')
+    }
+  }
+
+  /**
+   * 新建存储桶
+   * @param {Object} configMap
+    * configMap = {
+    * BucketName: string,
+    * region: string,
+    * acl: string
+    * }
+   */
+  async createBucket (configMap: IStringKeyMap): Promise<boolean> {
+    const { BucketName, region, acl, endpoint } = configMap
+    try {
+      await this.getDogeCloudToken()
+      const options = Object.assign({}, this.baseOptions) as S3ClientConfig
+      options.region = String(region) || 'us-east-1'
+      const client = new S3Client(options)
+      const command = new ListBucketsCommand({})
+      const data = await client.send(command)
+      if (data.$metadata.httpStatusCode === 200) {
+        const bucketList = data.Buckets?.map((item) => item.Name)
+        if (bucketList?.includes(BucketName)) {
+          return true
+        }
+      }
+      if (endpoint === '' || endpoint.includes('amazonaws')) {
+        const createCommand = new CreateBucketCommand({
+          Bucket: BucketName,
+          ObjectOwnership: 'BucketOwnerPreferred'
+        })
+        const createData = await client.send(createCommand)
+        if (createData.$metadata.httpStatusCode === 200) {
+          if (acl !== 'private') {
+            await this.putPublicAccess(BucketName, client)
+            const putACLCommand = new PutBucketAclCommand({
+              Bucket: BucketName,
+              ACL: acl
+            })
+            const putACLData = await client.send(putACLCommand)
+            if (putACLData.$metadata.httpStatusCode !== 200) {
+              this.logParam(putACLData, 'createBucket')
+              return false
+            }
+          }
+          return true
+        } else {
+          this.logParam(createData, 'createBucket')
+        }
+      } else {
+        const createCommand = new CreateBucketCommand({
+          Bucket: BucketName,
+          ACL: acl
+        })
+        const createData = await client.send(createCommand)
+        if (createData.$metadata.httpStatusCode === 200) {
+          return true
+        } else {
+          this.logParam(createData, 'createBucket')
+        }
+      }
+    } catch (error) {
+      this.logParam(error, 'createBucket')
+    }
+    return false
   }
 
   /**
@@ -333,7 +394,7 @@ class S3plistApi {
         res = await client.send(command)
         if (res.$metadata.httpStatusCode === 200) {
           res.CommonPrefixes && res.CommonPrefixes.forEach((item: CommonPrefix) => {
-            result.fullList.push(this.formatFolder(item, slicedPrefix))
+            result.fullList.push(this.formatFolder(item, slicedPrefix, urlPrefix))
           })
           res.Contents && res.Contents.forEach((item: _Object) => {
             result.fullList.push(this.formatFile(item, slicedPrefix, urlPrefix))
@@ -385,7 +446,7 @@ class S3plistApi {
       const data = await client.send(command)
       if (data.$metadata.httpStatusCode === 200) {
         result.fullList = [
-          ...(data.CommonPrefixes?.map(item => this.formatFolder(item, slicedPrefix)) || []),
+          ...(data.CommonPrefixes?.map(item => this.formatFolder(item, slicedPrefix, urlPrefix)) || []),
           ...(data.Contents?.map(item => this.formatFile(item, slicedPrefix, urlPrefix)) || [])
         ]
         result.isTruncated = data.IsTruncated || false
