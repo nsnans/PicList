@@ -1,80 +1,36 @@
 <template>
   <div id="picbeds-page">
-    <el-row
-      :gutter="20"
-      class="setting-list"
-    >
-      <el-col
-        :span="22"
-        :offset="1"
-      >
-        <div
-          class="view-title"
-        >
-          <span
-            class="view-title-text"
-            @click="handleNameClick"
-          >
-            {{ picBedName }} {{ $T('SETTINGS') }}</span>
+    <el-row :gutter="20" class="setting-list">
+      <el-col :span="22" :offset="1">
+        <div class="view-title">
+          <span class="view-title-text" @click="handleNameClick"> {{ picBedName }} {{ $T('SETTINGS') }}</span>
           <el-icon>
             <Link />
           </el-icon>
-          <el-button
-            type="primary"
-            round
-            size="small"
-            style="margin-left: 6px"
-            @click="handleCopyApi"
-          >
+          <el-button type="primary" round size="small" style="margin-left: 6px" @click="handleCopyApi">
             {{ $T('UPLOAD_PAGE_COPY_UPLOAD_API') }}
           </el-button>
         </div>
-        <config-form
-          v-if="config.length > 0"
-          :id="type"
-          ref="$configForm"
-          :config="config"
-          type="uploader"
-        >
+        <config-form v-if="config.length > 0" :id="type" ref="$configForm" :config="config" type="uploader">
           <el-form-item>
             <el-button-group>
-              <el-button
-                class="confirm-btn"
-                type="info"
-                round
-                @click="handleReset"
-              >
+              <el-button type="info" round @click="handleReset">
                 {{ $T('RESET_PICBED_CONFIG') }}
               </el-button>
-              <el-button
-                class="confirm-btn"
-                type="success"
-                round
-                @click="handleConfirm"
-              >
+              <el-button type="success" round @click="handleConfirm">
                 {{ $T('CONFIRM') }}
               </el-button>
-              <el-button
-                class="confirm-btn"
-                round
-                type="warning"
-                @mouseenter="handleMouseEnter"
-                @mouseleave="handleMouseLeave"
-              >
+              <el-button round type="warning" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
                 <el-dropdown
                   ref="$dropdown"
                   placement="top"
-                  style="color: #fff; font-size: 12px;width: 100%;"
+                  style="color: #fff; font-size: 12px; width: 100%"
                   :disabled="picBedConfigList.length === 0"
                   teleported
                 >
                   {{ $T('MANAGE_LOGIN_PAGE_PANE_IMPORT') }}
                   <template #dropdown>
-                    <el-dropdown-item
-                      v-for="i in picBedConfigList"
-                      :key="i._id"
-                      @click="handleConfigImport(i)"
-                    >
+                    <el-dropdown-item v-for="i in picBedConfigList" :key="i._id" @click="handleConfigImport(i)">
                       {{ i._configName }}
                     </el-dropdown-item>
                   </template>
@@ -83,10 +39,7 @@
             </el-button-group>
           </el-form-item>
         </config-form>
-        <div
-          v-else
-          class="single"
-        >
+        <div v-else class="single">
           <div class="notice">
             {{ $T('SETTINGS_NOT_CONFIG_OPTIONS') }}
           </div>
@@ -98,9 +51,7 @@
 
 <script lang="ts" setup>
 import dayjs from 'dayjs'
-import {
-  clipboard
-} from 'electron'
+import { clipboard } from 'electron'
 import { ElDropdown, ElMessage } from 'element-plus'
 import { Link } from '@element-plus/icons-vue'
 import { ref, onBeforeMount } from 'vue'
@@ -144,27 +95,27 @@ const handleConfirm = async () => {
   }
 }
 
-function handleMouseEnter () {
+function handleMouseEnter() {
   $dropdown.value?.handleOpen()
 }
 
-function handleMouseLeave () {
+function handleMouseLeave() {
   $dropdown.value?.handleClose()
 }
 
-async function getPicBeds () {
+async function getPicBeds() {
   const result = await triggerRPC<any>(IRPCActionType.PICBED_GET_PICBED_CONFIG, $route.params.type)
   config.value = result.config
   picBedName.value = result.name
 }
 
-async function getPicBedConfigList () {
-  const res = await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_GET_CONFIG_LIST, type.value) || undefined
+async function getPicBedConfigList() {
+  const res = (await triggerRPC<IUploaderConfigItem>(IRPCActionType.PICBED_GET_CONFIG_LIST, type.value)) || undefined
   const configList = res?.configList || []
-  picBedConfigList.value = configList.filter((item) => item._id !== $route.params.configId)
+  picBedConfigList.value = configList.filter(item => item._id !== $route.params.configId)
 }
 
-async function handleConfigImport (configItem: IUploaderConfigListItem) {
+async function handleConfigImport(configItem: IUploaderConfigListItem) {
   const { _id, _configName, _updatedAt, _createdAt, ...rest } = configItem
   for (const key in rest) {
     if (Object.prototype.hasOwnProperty.call(rest, key)) {
@@ -186,19 +137,19 @@ const handleReset = async () => {
   $router.back()
 }
 
-async function handleNameClick () {
-  const lang = await getConfig(configPaths.settings.language) || II18nLanguage.ZH_CN
+async function handleNameClick() {
+  const lang = (await getConfig(configPaths.settings.language)) || II18nLanguage.ZH_CN
   const url = picBedManualUrlList[lang === II18nLanguage.EN ? 'en' : 'zh_cn'][$route.params.type as string]
   if (url) {
     sendRPC(IRPCActionType.OPEN_URL, url)
   }
 }
 
-async function handleCopyApi () {
+async function handleCopyApi() {
   try {
-    const { port = 36677, host = '127.0.0.1' } = await getConfig<IStringKeyMap>(configPaths.settings.server) || {}
-    const serverKey = await getConfig(configPaths.settings.serverKey) || ''
-    const uploader = await getConfig(configPaths.uploader) as IStringKeyMap || {}
+    const { port = 36677, host = '127.0.0.1' } = (await getConfig<IStringKeyMap>(configPaths.settings.server)) || {}
+    const serverKey = (await getConfig(configPaths.settings.serverKey)) || ''
+    const uploader = ((await getConfig(configPaths.uploader)) as IStringKeyMap) || {}
     const picBedConfigList = uploader[$route.params.type as string].configList || []
     const picBedConfig = picBedConfigList.find((item: IUploaderConfigListItem) => item._id === $route.params.configId)
     if (!picBedConfig) {
@@ -221,7 +172,7 @@ export default {
 }
 </script>
 
-<style lang='stylus'>
+<style lang="stylus">
 #picbeds-page
   height 100%
   overflow-y auto
@@ -237,8 +188,6 @@ export default {
     &:hover
       cursor pointer
       color #409EFF
-  .confirm-btn
-    width: 110px
   .el-form
     label
       line-height 22px
@@ -249,7 +198,7 @@ export default {
     .el-button-group
       width 100%
       .el-button
-        width 33%
+        width calc(33.3333% - 10px)
     .el-radio-group
       margin-left 25px
     .el-switch__label
