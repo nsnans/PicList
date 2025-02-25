@@ -23,13 +23,13 @@ PicList is an efficient cloud storage and image hosting platform management tool
 
 ## How to migrate from PicGo
 
-PicList `V1.5.0` and above versions provide the `one-click migration` function. Enter the `Settings` page, and then click the right button on the `Migrate from PicGo` option to migrate. Please restart the application to take effect after migration.
+PicList `V1.5.0` and above versions provide the `one-click migration` function. Enter the `Settings` page, and then click the right button on the `Migrate from PicGo` option to migrate. Please restart the application for the changes to take effect after migration.
 
 ## PicList-Core
 
 The core of PicList is based on the original PicGo-Core [PicList-core](https://github.com/Kuingsmile/PicList-Core), which is adapted for cloud deletion and other functions, and adds watermark addition and image compression / scaling / rotation / format conversion functions, which can be called through CLI command line, support starting the built-in upload server through `picgo-server`，as well as some other function changes.
 
-if you want to use PicList-core, please go to [https://github.com/Kuingsmile/PicList-Core](https://github.com/Kuingsmile/PicList-Core), or go to [npm official address](https://www.npmjs.com/package/piclist) to view the installation instructions.
+If you want to use PicList-core, please go to [https://github.com/Kuingsmile/PicList-Core](https://github.com/Kuingsmile/PicList-Core), or go to [npm official address](https://www.npmjs.com/package/piclist) to view the installation instructions.
 
 ## Features
 
@@ -58,7 +58,7 @@ Please install my matching plugin [VS-PicList](https://marketplace.visualstudio.
 
 #### **Version 1.6.0-dev and above**
 
-**Typora 1.6.0-dev and above versions now support PicList natively if you set language of Typora to Chinese.**
+**Typora 1.6.0-dev and above versions now support PicList natively if you set the language of Typora to Chinese.**
 
 If your Typora version is lower than 1.8.0, you need to set the upload service PicList and PicGo (app) to the installation path of PicList at the same time.
 
@@ -66,11 +66,11 @@ If your Typora version is lower than 1.8.0, you need to set the upload service P
 
 #### **Version < 1.6.0-dev**
 
-For windows, Enter the Typora settings page, select the image, set the upload service to `PicGo(app)`, and then fill in the installation path of PicList in `PicGo path`, as shown below:
+For Windows, enter the Typora settings page, select the image, set the upload service to `PicGo(app)`, and then fill in the installation path of PicList in `PicGo path`, as shown below:
 
 ![image](https://user-images.githubusercontent.com/96409857/226522101-b3531b7b-534c-4149-b527-8738d4ebb041.png)
 
-Or, you can also use the `npm install piclist` command to install PicList-core, and then set the upload service to `PicGo-Core(command line)`.
+Or, you can also use the `npm install piclist` command to install PicList-core, and then set the upload service to `PicGo-Core (command line)`.
 
 ### How to use in Obsidian
 
@@ -180,7 +180,7 @@ brew uninstall piclist
 
 If the macOS system installs PicList and displays "file is damaged" or installs and opens without response, please upgrade to PicList V1.4.1 or above.
 
-After V1.4.1, all mac installation packages have been signed by my developer certificate, will not be recognized by the macOS system as "malicious software", will not appear "file is damaged" prompt.
+After V1.4.1, all mac installation packages have been signed by my developer certificate. They will not be recognized by the macOS system as "malicious software" and will not trigger the "file is damaged" prompt.
 
 ## Application screenshot
 
@@ -195,17 +195,17 @@ After V1.4.1, all mac installation packages have been signed by my developer cer
 
 1. You need to have Node, Git environment, and understand the related knowledge of npm.
 2. git clone [https://github.com/Kuingsmile/PicList.git](https://github.com/Kuingsmile/PicList.git) and enter the project.
-   `yarn` download dependencies
+   Use `yarn` to download dependencies.
    Note that if you don't have `yarn`, please go to the official website to download and install it before using it. Using `npm install` will cause unknown errors!
-3. Mac needs `Xcode` environment, Windows needs `VS` environment.
-4. If you need to contribute code, you can refer to [contribution guide](https://github.com/Kuingsmile/PicList/blob/dev/CONTRIBUTING_EN.md)
+3. Mac needs the `Xcode` environment, while Windows needs the `VS` environment.
+4. If you need to contribute code, you can refer to the [contribution guide](https://github.com/Kuingsmile/PicList/blob/dev/CONTRIBUTING_EN.md)
 
 ### Development mode
 
-Enter `yarn run dev` to enter development mode, which has hot reload feature. However, it should be noted that the development mode is unstable and there will be process crashes. At this time, you need to:
+Enter `yarn run dev` to enter development mode, which has a hot reload feature. However, it should be noted that the development mode is unstable and there may be process crashes. At this time, you need to:
 
-`ctrl+c` # Exit development mode
-`yarn run dev` # Re-enter development mode
+`ctrl+c` # Exit development mode  
+`yarn run dev` # Re-enter development mode  
 
 Note: After the development mode is running, the application icon of PicList will appear in the application area of the taskbar in the lower right corner of the bottom bar.
 
@@ -215,7 +215,7 @@ If you need to build it yourself, you can start building with `yarn run build`. 
 
 ## Other related
 
-- [PicList-Core](https://github.com/Kuingsmile/PicList-Core) : A core library based on PicGo-Core for CLI operations and project development
+- [PicList-Core](https://github.com/Kuingsmile/PicList-Core): A core library based on PicGo-Core for CLI operations and project development
 - [PicHoro](https://github.com/Kuingsmile/PicHoro): A mobile APP that works with PicList
 - [VS-PicList](https://github.com/Kuingsmile/vs-PicList/): A VScode plugin that works with PicList
 
