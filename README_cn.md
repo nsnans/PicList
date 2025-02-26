@@ -58,7 +58,7 @@ PicList的内核使用的是原版PicGo-Core基础上修改的[PicList-core](htt
 
 #### **1.6.0版本及以上**
 
-**Typora 1.6.0-dev以及以上版本现在已经原生支持PicList了, 但你需要将Typora的语言设置为中文**
+**Typora 1.6.0-dev以及以上版本现在已经原生支持PicList了, 在1.10.6版本以下中，你需要将Typora的语言设置为中文**
 
 1.8.0以下版本的Typora中需要同时设置上传服务PicList和PicGo（app）的路径为PicList的安装路径。
 

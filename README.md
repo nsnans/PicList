@@ -58,7 +58,7 @@ Please install my matching plugin [VS-PicList](https://marketplace.visualstudio.
 
 #### **Version 1.6.0-dev and above**
 
-**Typora 1.6.0-dev and above versions now support PicList natively if you set the language of Typora to Chinese.**
+**Typora 1.6.0-dev and above versions now natively support PicList. In versions below 1.10.6, you need to set the language of Typora to Chinese.**
 
 If your Typora version is lower than 1.8.0, you need to set the upload service PicList and PicGo (app) to the installation path of PicList at the same time.
 
