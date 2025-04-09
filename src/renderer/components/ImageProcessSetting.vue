@@ -285,15 +285,15 @@ import { configPaths } from '#/utils/configPaths'
 const imageProcessDialogVisible = defineModel<boolean>()
 
 const waterMarkPositionMap = new Map([
+  ['northwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_LEFT')],
   ['north', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP')],
   ['northeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_RIGHT')],
-  ['southeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_RIGHT')],
-  ['south', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM')],
-  ['southwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_LEFT')],
-  ['northwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_TOP_LEFT')],
   ['west', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_LEFT')],
+  ['centre', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_CENTER')],
   ['east', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_RIGHT')],
-  ['centre', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_CENTER')]
+  ['southwest', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_LEFT')],
+  ['south', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM')],
+  ['southeast', $T('UPLOAD_PAGE_IMAGE_PROCESS_POSITION_BOTTOM_RIGHT')]
 ])
 const imageExtList = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'tiff', 'tif', 'svg', 'ico', 'avif', 'heif', 'heic']
 const availableFormat = [
