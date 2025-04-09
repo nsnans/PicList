@@ -4,21 +4,20 @@
       <div class="fake-title-bar__title">PicList - {{ version }}</div>
       <div v-if="osGlobal !== 'darwin'" class="handle-bar">
         <el-icon
-          class="minus"
+          class="control-icon always-on-top"
           :color="isAlwaysOnTop ? '#409EFF' : '#fff'"
           size="20"
-          style="margin-right: 10px"
           @click="setAlwaysOnTop"
         >
           <ArrowUpBold />
         </el-icon>
-        <el-icon class="minus" color="#fff" size="20" style="margin-right: 10px" @click="minimizeWindow">
+        <el-icon class="control-icon minimize" color="#fff" size="20" @click="minimizeWindow">
           <SemiSelect />
         </el-icon>
-        <el-icon class="plus" color="orange" size="20" style="margin-right: 10px" @click="openMiniWindow">
+        <el-icon class="control-icon mini-window" color="#FFA500" size="20" @click="openMiniWindow">
           <ArrowDownBold />
         </el-icon>
-        <el-icon class="close" color="#fff" size="20" @click="closeWindow">
+        <el-icon class="control-icon close" color="#fff" size="20" @click="closeWindow">
           <CloseBold />
         </el-icon>
       </div>
@@ -26,38 +25,30 @@
     <el-progress
       v-if="isShowprogress"
       :percentage="progress"
-      :stroke-width="7"
+      :stroke-width="4"
       :text-inside="true"
       :show-text="false"
       status="success"
       class="progress-bar"
     />
-    <el-row style="padding-top: 22px" class="main-content">
+    <el-row class="main-content">
       <el-col class="side-bar-menu">
         <el-menu class="picgo-sidebar" :default-active="defaultActive" :unique-opened="true" @select="handleSelect">
-          <el-menu-item :index="routerConfig.UPLOAD_PAGE">
-            <el-icon>
-              <UploadFilled />
-            </el-icon>
+          <el-menu-item :index="routerConfig.UPLOAD_PAGE" class="side-menu-item">
+            <el-icon class="menu-icon"><UploadFilled /></el-icon>
             <span>{{ $T('UPLOAD_AREA') }}</span>
           </el-menu-item>
-          <el-menu-item :index="routerConfig.MANAGE_LOGIN_PAGE">
-            <el-icon>
-              <PieChart />
-            </el-icon>
+          <el-menu-item :index="routerConfig.MANAGE_LOGIN_PAGE" class="side-menu-item">
+            <el-icon class="menu-icon"><PieChart /></el-icon>
             <span>{{ $T('MANAGE_PAGE') }}</span>
           </el-menu-item>
-          <el-menu-item :index="routerConfig.GALLERY_PAGE">
-            <el-icon>
-              <PictureFilled />
-            </el-icon>
+          <el-menu-item :index="routerConfig.GALLERY_PAGE" class="side-menu-item">
+            <el-icon class="menu-icon"><PictureFilled /></el-icon>
             <span>{{ $T('GALLERY') }}</span>
           </el-menu-item>
-          <el-sub-menu index="sub-menu" :show-timeout="0" :hide-timeout="0" :popper-offset="0">
+          <el-sub-menu index="sub-menu" :show-timeout="0" :hide-timeout="0" :popper-offset="0" class="side-menu-sub">
             <template #title>
-              <el-icon>
-                <Menu />
-              </el-icon>
+              <el-icon class="menu-icon"><Menu /></el-icon>
               <span>{{ $T('PICBEDS_SETTINGS') }}</span>
             </template>
             <template v-for="item in picBedGlobal">
@@ -65,35 +56,32 @@
                 v-if="item.visible"
                 :key="item.type"
                 :index="`${routerConfig.UPLOADER_CONFIG_PAGE}-${item.type}`"
+                class="side-submenu-item"
               >
                 <span>{{ item.name }}</span>
               </el-menu-item>
             </template>
           </el-sub-menu>
-          <el-menu-item :index="routerConfig.SETTING_PAGE">
-            <el-icon>
-              <Tools />
-            </el-icon>
+          <el-menu-item :index="routerConfig.SETTING_PAGE" class="side-menu-item">
+            <el-icon class="menu-icon"><Tools /></el-icon>
             <span>{{ $T('PICLIST_SETTINGS') }}</span>
           </el-menu-item>
-          <el-menu-item :index="routerConfig.PLUGIN_PAGE">
-            <el-icon>
-              <Share />
-            </el-icon>
+          <el-menu-item :index="routerConfig.PLUGIN_PAGE" class="side-menu-item">
+            <el-icon class="menu-icon"><Share /></el-icon>
             <span>{{ $T('PLUGIN_SETTINGS') }}</span>
           </el-menu-item>
-          <el-menu-item :index="routerConfig.DocumentPage">
-            <el-icon>
-              <Link />
-            </el-icon>
+          <el-menu-item :index="routerConfig.DocumentPage" class="side-menu-item">
+            <el-icon class="menu-icon"><Link /></el-icon>
             <span>{{ $T('MANUAL') }}</span>
           </el-menu-item>
         </el-menu>
+      </el-col>
+      <div class="info-window-container">
         <el-icon class="info-window" @click="openMenu">
           <InfoFilled />
         </el-icon>
-      </el-col>
-      <el-col :span="21" :offset="3" style="height: 100%" class="main-wrapper">
+      </div>
+      <el-col :span="21" :offset="3" class="main-wrapper">
         <router-view v-slot="{ Component }">
           <transition name="picgo-fade" mode="out-in">
             <keep-alive :include="keepAlivePages">
@@ -305,13 +293,20 @@ export default {
   name: 'MainPage'
 }
 </script>
+
 <style lang="stylus">
 $darwinBg = transparentify(#172426, #000, 0.7)
+$menuActiveBg = rgba(64, 158, 255, 0.15)
+$menuHoverBg = rgba(255, 255, 255, 0.08)
+$borderRadius = 8px
+$transitionDefault = all 0.25s cubic-bezier(0.4, 0, 0.2, 1)
+
 .setting-list-scroll
   height 800px
   overflow-y auto
   overflow-x hidden
   margin-right 0!important
+
 .picgo-fade
   &-enter,
   &-leave,
@@ -319,14 +314,44 @@ $darwinBg = transparentify(#172426, #000, 0.7)
     opacity 0
   &-enter-active,
   &-leave-active
-    transition all 150ms linear
+    transition all 200ms cubic-bezier(0.4, 0, 0.2, 1)
+
 .view-title
   color #eee
   font-size 20px
   text-align center
   margin 10px auto
+
 #main-page
   height 100%
+  background linear-gradient(135deg, rgba(40, 44, 52, 0.85) 0%, rgba(30, 34, 42, 0.9) 100%)
+  display flex
+  flex-direction column
+  overflow hidden
+
+  .info-window-container
+    position fixed
+    bottom 4px
+    left 4px
+    z-index 50
+    width 40px
+    height 40px
+
+    .info-window
+      cursor pointer
+      color #878d99
+      padding 6px
+      background rgba(40, 44, 52, 0.5)
+      border-radius 50%
+      box-shadow 0 2px 8px rgba(0, 0, 0, 0.15)
+      transition $transitionDefault
+
+      &:hover
+        color #409EFF
+        background rgba(64, 158, 255, 0.15)
+        transform translateY(-2px)
+        box-shadow 0 4px 12px rgba(0, 0, 0, 0.25)
+
   .qrcode-dialog
     .qrcode-container
       display flex
@@ -335,16 +360,26 @@ $darwinBg = transparentify(#172426, #000, 0.7)
       padding-top 10px
     .copy-picbed-config
       margin-left 10px
+      transition $transitionDefault
+      &:hover
+        transform translateY(-2px)
+        box-shadow 0 4px 12px rgba(0, 0, 0, 0.2)
+
   .fake-title-bar
     -webkit-app-region drag
-    height h = 22px
+    height h = 28px
     width 100%
     text-align center
     color #eee
-    font-size 12px
+    font-size 13px
+    font-weight 500
     line-height h
     position fixed
     z-index 100
+    backdrop-filter blur(5px)
+    background rgba(30, 34, 42, 0.7)
+    box-shadow 0 1px 3px rgba(0, 0, 0, 0.2)
+
     &.darwin
       background transparent
       background-image linear-gradient(
@@ -356,98 +391,167 @@ $darwinBg = transparentify(#172426, #000, 0.7)
       )
       .fake-title-bar__title
         padding-left 167px
+
+    .fake-title-bar__title
+      letter-spacing 0.5px
+
     .handle-bar
       position absolute
-      top 2px
-      right 4px
+      top 4px
+      right 8px
       z-index 10000
       -webkit-app-region no-drag
-      .el-icon
+      display flex
+      gap 12px
+
+      .control-icon
         cursor pointer
         font-size 16px
-        margin-left 5px
-      .el-icon.minus
-        &:hover
-          color #409EFF
-      .el-icon.close
-        &:hover
-          color #F15140
-      .el-icon.plus
-        &:hover
-          color #69C282
+        transition $transitionDefault
+        border-radius 4px
+        padding 2px
+
+        &.always-on-top
+          &:hover
+            color #409EFF
+            background rgba(64, 158, 255, 0.15)
+
+        &.minimize
+          &:hover
+            color #409EFF
+            background $menuHoverBg
+
+        &.close
+          &:hover
+            color #F15140
+            background rgba(241, 81, 64, 0.15)
+
+        &.mini-window
+          &:hover
+            color #FFC107
+            background rgba(255, 193, 7, 0.15)
+
+  .progress-bar
+    position fixed
+    top 28px
+    width 100%
+    z-index 90
+    transition opacity 0.3s ease
+
   .main-wrapper
     &.darwin
       background $darwinBg
+    padding 10px
+    border-radius $borderRadius
+    background rgba(30, 34, 42, 0.5)
+
   .side-bar-menu
     position fixed
-    height calc(100vh - 22px)
+    height calc(100vh - 28px)
     overflow-x hidden
     overflow-y auto
     width 142px
-    .info-window
-      cursor pointer
-      position fixed
-      bottom 4px
-      left 4px
-      cursor poiter
-      color #878d99
-      transition .2s all ease-in-out
-      &:hover
-        color #409EFF
+    padding-top 35px
+    padding-bottom 40px
+    transition $transitionDefault
+    background rgba(30, 34, 42, 0.5)
+    backdrop-filter blur(10px)
+
+    &:hover
+      width 145px
+
   .el-menu
     border-right none
     background transparent
     width 142px
+
     &-item
       color #eee
       position relative
+      border-radius $borderRadius
+      margin 4px 8px
+      height 40px
+      line-height 40px
+      transition $transitionDefault
+
       &:focus,
       &:hover
         color #fff
-        background transparent
+        background $menuHoverBg
+
       &.is-active
         color active-color = #409EFF
-        &:before
-          content ''
-          position absolute
-          width 1px
-          height 20px
-          right 0
-          top 18px
-          background active-color
+        background $menuActiveBg
+        font-weight 500
+
+        .menu-icon
+          color active-color
+
+  .side-menu-item
+    padding-left 16px!important
+
+    .menu-icon
+      margin-right 8px
+      transition $transitionDefault
+
   .el-sub-menu__title
     color #eee
+    border-radius $borderRadius
+    margin 4px 8px
+    height 40px
+    line-height 40px
+    transition $transitionDefault
+
     &:hover
-      background transparent
+      background $menuHoverBg
       span
         color #fff
+
+    .menu-icon
+      margin-right 8px
+
   .el-sub-menu
     .el-menu-item
       min-width 142px
+
       &.is-active
-        &:before
-          top 16px
+        background $menuActiveBg
+
+  .side-submenu-item
+    margin-left 0!important
+    border-radius $borderRadius
+    padding-left 38px!important
+
   .main-content
-    padding-top 22px
+    padding-top 28px
     position relative
-    height calc(100vh - 22px)
+    height calc(100vh - 28px)
     z-index 10
+
   .el-dialog__body
     padding 20px
+
   .support
     text-align center
     &-title
       text-align center
       color #878d99
+
   .align-center
     input
       text-align center
+
   *::-webkit-scrollbar
-    width 2px
+    width 4px
     height 8px
+
   *::-webkit-scrollbar-thumb
-    border-radius 4px
-    background #6f6f6f
+    border-radius 10px
+    background rgba(111, 111, 111, 0.5)
+
+    &:hover
+      background rgba(140, 140, 140, 0.7)
+
   *::-webkit-scrollbar-track
     background-color transparent
 </style>

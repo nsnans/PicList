@@ -553,7 +553,7 @@ export default {
     gap 12px
 
 .option-card
-  background rgba(255, 255, 255, 0.05)
+  background rgba(255, 255, 255, 0.02)
   border-radius 12px
   padding 12px
   backdrop-filter blur(5px)
